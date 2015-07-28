@@ -71,6 +71,8 @@ public class JavaMethodObject extends CallableObject {
 	 * @return
 	 */
 	public PythonObject doCall(TupleObject args, boolean skipPythonException) {
+		if (toString().contains("__iter__")) 
+			System.out.println(this);
 		try {
 			if (noTypeConversion){
 				return Utils.cast(invoke(args), boundHandle.getReturnType());
@@ -80,9 +82,9 @@ public class JavaMethodObject extends CallableObject {
 		} catch (InvocationTargetException e){
 			if (e.getTargetException() instanceof PythonExecutionException)
 				throw (RuntimeException)e.getTargetException();
-			throw Utils.throwException("TypeError", toString() + ": failed java call");
+			throw Utils.throwException("TypeError", toString() + ": failed java call", e);
 		} catch (Throwable e){
-			throw Utils.throwException("TypeError", toString() + ": failed java call");
+			throw Utils.throwException("TypeError", toString() + ": failed java call", e);
 		}
 		
 		Object[] jargs = new Object[args.len()];
@@ -113,9 +115,9 @@ public class JavaMethodObject extends CallableObject {
 		} catch (InvocationTargetException e){
 			if (e.getTargetException() instanceof PythonExecutionException)
 				throw (RuntimeException)e.getTargetException();
-			throw Utils.throwException("TypeError", toString() + ": failed java call");
+			throw Utils.throwException("TypeError", toString() + ": failed java call", e);
 		} catch (Throwable e) {
-			throw Utils.throwException("TypeError", toString() + ": failed java call");
+			throw Utils.throwException("TypeError", toString() + ": failed java call", e);
 		}
 	}
 
