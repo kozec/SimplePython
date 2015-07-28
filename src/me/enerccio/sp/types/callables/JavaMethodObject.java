@@ -71,8 +71,6 @@ public class JavaMethodObject extends CallableObject {
 	 * @return
 	 */
 	public PythonObject doCall(TupleObject args, boolean skipPythonException) {
-		if (toString().contains("__iter__")) 
-			System.out.println(this);
 		try {
 			if (noTypeConversion){
 				return Utils.cast(invoke(args), boundHandle.getReturnType());
