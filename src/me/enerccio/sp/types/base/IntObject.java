@@ -28,26 +28,43 @@ import me.enerccio.sp.types.PythonObject;
  */
 public class IntObject extends NumberObject {
 	private static final long serialVersionUID = 6L;
+	/** 
+	 * If false, BigInteger-based integers are used, allowing greater range at cost of
+	 * slower execution.
+	 */ 
+	public static boolean USE_JAVAINT = true;	
+	public static int BASE_MAP_SIZE = 1024;
 	
-	public IntObject(){
-		newObject();
-	}
-	
-	private static IntObject[] baseMap = new IntObject[255];
+	private static NumberObject[] baseMap = new NumberObject[BASE_MAP_SIZE];
+	public static int HALF_BASE_MAP_SIZE = BASE_MAP_SIZE / 2;
 	static {
-		for (int i=0; i<255; i++)
-			baseMap[i] = new IntObject(i-127);
+		if (USE_JAVAINT)
+			for (int i=0; i<BASE_MAP_SIZE; i++)
+				baseMap[i] = new JavaIntObject(i-HALF_BASE_MAP_SIZE);
+		else
+			for (int i=0; i<BASE_MAP_SIZE; i++)
+				baseMap[i] = new IntObject(i-HALF_BASE_MAP_SIZE);
 	}
 	
-	public static IntObject valueOf(int v){
-		if (v+127 < 255 &&  v+127 > 0)
-			return baseMap[v+127];
+	public static NumberObject valueOf(int v){
+		if (v+HALF_BASE_MAP_SIZE < BASE_MAP_SIZE && v+HALF_BASE_MAP_SIZE > 0)
+			return baseMap[v+HALF_BASE_MAP_SIZE];
+		if (USE_JAVAINT)
+			return new JavaIntObject(v);
 		return new IntObject(v);
 	}
 	
-	public static IntObject valueOf(long v){
-		if (v+127 < 255 &&  v+127 > 0)
-			return baseMap[(int) (v+127)];
+	public static NumberObject valueOf(long v){
+		if (v+HALF_BASE_MAP_SIZE < BASE_MAP_SIZE && v+HALF_BASE_MAP_SIZE > 0)
+			return baseMap[(int) (v+HALF_BASE_MAP_SIZE)];
+		if (USE_JAVAINT)
+			return new JavaIntObject(v);
+		return new IntObject(v);
+	}
+	
+	public static NumberObject valueOf(BigInteger v){
+		if (USE_JAVAINT)
+			return new JavaIntObject(v.intValue());
 		return new IntObject(v);
 	}
 	
@@ -61,7 +78,7 @@ public class IntObject extends NumberObject {
 		newObject();
 	}
 	
-	public IntObject(BigInteger v){
+	private IntObject(BigInteger v){
 		value = v;
 		newObject();
 	}
@@ -74,22 +91,18 @@ public class IntObject extends NumberObject {
 	}
 	
 	@Override 
-	public BigInteger getJavaInt() {
-		return value;
+	public int intValue() {
+		return value.intValue();
 	}
 	
 	@Override
-	public double getJavaFloat() {
+	public double doubleValue() {
 		return value.doubleValue();
 	}
 	
 	@Override
 	public int getId(){
 		return value.hashCode();
-	}
-
-	public int intValue() {
-		return (int)longValue();
 	}
 
 	public long longValue() {
@@ -116,5 +129,11 @@ public class IntObject extends NumberObject {
 	@Override
 	protected String doToString() {
 		return value.toString();
+	}
+
+	public static boolean isInt(PythonObject b) {
+		if (USE_JAVAINT) 
+			return b instanceof JavaIntObject;
+		return b instanceof IntObject;
 	}
 }

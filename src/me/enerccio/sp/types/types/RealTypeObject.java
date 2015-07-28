@@ -49,11 +49,11 @@ public class RealTypeObject extends TypeObject {
 		PythonObject a = args.valueAt(0);
 		
 		if (a instanceof IntObject)
-			return new RealObject(((IntObject) a).getJavaFloat());
+			return new RealObject(((IntObject) a).doubleValue());
 		if (a instanceof RealObject)
 			return a;
 		if (a instanceof ComplexObject)
-			return new RealObject(((ComplexObject)a).getJavaFloat());
+			return new RealObject(((ComplexObject)a).doubleValue());
 		if (a instanceof ClassInstanceObject){
 			ClassInstanceObject c = (ClassInstanceObject)a;
 			int cfc = PythonInterpret.interpret.get().currentFrame.size();

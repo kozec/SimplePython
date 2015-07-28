@@ -17,8 +17,6 @@
  */
 package me.enerccio.sp.types.base;
 
-import java.math.BigInteger;
-
 import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.PythonObject;
@@ -54,12 +52,12 @@ public class ComplexObject extends NumberObject {
 	}
 	
 	@Override 
-	public BigInteger getJavaInt() {
+	public int intValue() {
 		throw Utils.throwException("TypeError", "can't convert complex to int");
 	}
 	
 	@Override
-	public double getJavaFloat() {
+	public double doubleValue() {
 		throw Utils.throwException("TypeError", "can't convert complex to float");
 	}
 

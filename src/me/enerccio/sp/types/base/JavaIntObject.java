@@ -17,60 +17,73 @@
  */
 package me.enerccio.sp.types.base;
 
+import java.math.BigInteger;
+
 import me.enerccio.sp.types.PythonObject;
 
 /**
- * Represents boolean. Cannot be instantiated. 
- * @author Enerccio
- *
+ * fixnum represented by standard integer.
+ * Used only if IntObject.USE_JAVAINT is set to true.
  */
-public class BoolObject extends NumberObject {
-	private static final long serialVersionUID = 7L;
+public class JavaIntObject extends NumberObject {
+	private static final long serialVersionUID = 42L;
 	
-	/** Python True */
-	public static final BoolObject TRUE = new BoolObject(true);
-	/** Python False */
-	public static final BoolObject FALSE = new BoolObject(false);
-	
-	private final boolean value;
-	
-	private BoolObject(boolean v){
-		this.value = v;
+	JavaIntObject(int v){
+		value = v;
 		newObject();
 	}
 	
-	@Override
-	protected void registerObject(){
-		
+	JavaIntObject(long v){
+		value = (int) v;
+		newObject();
 	}
 	
-	@Override 
-	public int intValue() {
-		return value ? 1 : 0;
+	JavaIntObject(BigInteger v){
+		value = v.intValue();
+		newObject();
 	}
 	
-	@Override
-	public double doubleValue() {
-		return value ? 1.0 : 0.0;
-	}
-	
+	private int value;
+
 	@Override
 	public boolean truthValue() {
+		return value != 0;
+	}
+	
+	@Override
+	public int getId(){
 		return value;
 	}
 
-	public static PythonObject fromBoolean(Boolean ret) {
-		return ret ? TRUE : FALSE;
+	@Override 
+	public int intValue() {
+		return value;
+	}
+
+	@Override
+	public double doubleValue() {
+		return value;
 	}
 
 	@Override
 	protected PythonObject getIntValue() {
-		return value ? IntObject.valueOf(1) : IntObject.valueOf(0);
+		return this;
+	}
+	
+	@Override
+	public int hashCode(){
+		return value;
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if (o instanceof JavaIntObject)
+			return value == ((JavaIntObject)o).value;
+		return false;
 	}
 
 	@Override
 	protected String doToString() {
-		return value ? "True" : "False";
+		return Integer.toString(value);
 	}
-
 }

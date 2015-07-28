@@ -17,8 +17,6 @@
  */
 package me.enerccio.sp.types.base;
 
-import java.math.BigInteger;
-
 import me.enerccio.sp.types.PythonObject;
 
 /**
@@ -46,15 +44,10 @@ public class RealObject extends NumberObject {
 	private double value;
 	
 	@Override 
-	public BigInteger getJavaInt() {
-		return BigInteger.valueOf((long)value);
+	public int intValue() {
+		return (int)value;
 	}
 	
-	@Override
-	public double getJavaFloat() {
-		return value;
-	}
-
 	@Override
 	public boolean truthValue() {
 		return value != 0;
@@ -65,10 +58,6 @@ public class RealObject extends NumberObject {
 		return Double.valueOf(value).hashCode();
 	}
 
-	public float floatValue() {
-		return (float)doubleValue();
-	}
-	
 	public double doubleValue(){
 		return value;
 	}

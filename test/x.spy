@@ -1,9 +1,10 @@
-def fnc(a, b, c):
-    if a is None: return 0
-    return c * (a + b)
-
 def test():
-    x = [1, 2, 3, 4]
-    y = [2, 2, 4, 2]
-    z = [-1, 1, -1, 1]
-    print map(fnc, x, y, z)
+    for i in xrange(0, 64):
+        for j in xrange(0, 64):
+            a = i * j
+    
+    print a
+
+#print [ x for x in iter(xrange(3,10,1)) ]
+
+#print [ x for x in xrange(3,10,1).__reversed__() ]

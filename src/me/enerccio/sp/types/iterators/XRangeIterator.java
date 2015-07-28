@@ -25,6 +25,7 @@ import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.IntObject;
+import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.sequences.SequenceObject;
 import me.enerccio.sp.types.sequences.TupleObject;
@@ -92,7 +93,7 @@ public class XRangeIterator extends PythonObject {
 			if (i <= end)
 				throw Utils.throwException("StopIteration");
 		}
-		IntObject rv = IntObject.valueOf(i);
+		NumberObject rv = IntObject.valueOf(i);
 		i += step;
 		return rv;
 	}

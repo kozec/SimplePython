@@ -19,6 +19,7 @@ package me.enerccio.sp.types.types;
 
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.IntObject;
+import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.types.sequences.XRangeObject;
 import me.enerccio.sp.utils.Utils;
@@ -40,9 +41,9 @@ public class XRangeTypeObject extends TypeObject {
 		if ((args.len() < 1) || (args.len() > 3))
 			throw Utils.throwException("TypeError", "xrange() requires 1-3 int arguments");
 		
-		int start = ((IntObject)args.valueAt(0)).intValue();
-		int end = args.len() < 2 ? 0 : ((IntObject)args.valueAt(1)).intValue();
-		int step = args.len() < 3 ? 1 : ((IntObject)args.valueAt(2)).intValue();
+		int start = ((NumberObject)args.valueAt(0)).intValue();
+		int end = args.len() < 2 ? 0 : ((NumberObject)args.valueAt(1)).intValue();
+		int step = args.len() < 3 ? 1 : ((NumberObject)args.valueAt(2)).intValue();
 		if (args.len() < 2) {
 			end = start;
 			start = 0;

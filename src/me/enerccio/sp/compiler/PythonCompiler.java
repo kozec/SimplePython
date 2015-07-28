@@ -105,6 +105,7 @@ import me.enerccio.sp.types.base.ComplexObject;
 import me.enerccio.sp.types.base.EllipsisObject;
 import me.enerccio.sp.types.base.IntObject;
 import me.enerccio.sp.types.base.NoneObject;
+import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.base.RealObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.mappings.MapObject;
@@ -1265,18 +1266,32 @@ public class PythonCompiler {
 			if (nb.integer() != null){
 				IntegerContext ic = nb.integer();
 				String numberValue = nb.integer().getText();
-				BigInteger bi = null;
+				NumberObject o = null;
 				
-				if (ic.BIN_INTEGER() != null)
-					bi = new BigInteger(numberValue, 2);
-				if (ic.OCT_INTEGER() != null)
-					bi = new BigInteger(numberValue, 8);
-				if (ic.DECIMAL_INTEGER() != null)
-					bi = new BigInteger(numberValue, 10);
-				if (ic.HEX_INTEGER() != null)
-					bi = new BigInteger(numberValue, 16);
-				
-				IntObject o = new IntObject(bi);
+				if (IntObject.USE_JAVAINT) {
+					int i = 0;
+					if (ic.BIN_INTEGER() != null)
+						i = Integer.valueOf(numberValue, 2);
+					if (ic.OCT_INTEGER() != null)
+						i = Integer.valueOf(numberValue, 8);
+					if (ic.DECIMAL_INTEGER() != null)
+						i = Integer.valueOf(numberValue, 10);
+					if (ic.HEX_INTEGER() != null)
+						i = Integer.valueOf(numberValue, 16);
+					o = IntObject.valueOf(i);
+				} else {
+					BigInteger bi = null;
+					if (ic.BIN_INTEGER() != null)
+						bi = new BigInteger(numberValue, 2);
+					if (ic.OCT_INTEGER() != null)
+						bi = new BigInteger(numberValue, 8);
+					if (ic.DECIMAL_INTEGER() != null)
+						bi = new BigInteger(numberValue, 10);
+					if (ic.HEX_INTEGER() != null)
+						bi = new BigInteger(numberValue, 16);
+					
+					o = IntObject.valueOf(bi);
+				}
 				bytecode.add(cb = Bytecode.makeBytecode(Bytecode.PUSH, ctx.start));
 				cb.value = o;
 			} else if (nb.FLOAT_NUMBER() != null){
