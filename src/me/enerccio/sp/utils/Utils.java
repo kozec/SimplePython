@@ -136,7 +136,7 @@ public class Utils {
 
 		if (aType == Long.class || aType == long.class) {
 			if (o instanceof IntObject)
-				return ((IntObject)o).longValue();
+				return ((IntObject)o).intValue();
 			else
 				return asJavaObject(aType, PythonInterpret.interpret.get().executeCall("int", o));
 		}
@@ -343,7 +343,7 @@ public class Utils {
 	public static PythonObject doGet(SimpleIDAccessor o, PythonObject idx) {
 		if (!(idx instanceof IntObject))
 			throw throwException("TypeError", "Index must be int");
-		int i = ((IntObject)idx).intValue();
+		int i = (int) ((IntObject)idx).intValue();
 		if (i >= o.len() || i<-(o.len()))
 			throw  throwException("IndexError", "Incorrect index, expected (" + -o.len() + ", " + o.len() + "), got " + i);
 		return o.valueAt(morphAround(i, o.len()));
