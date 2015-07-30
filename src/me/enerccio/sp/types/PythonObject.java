@@ -140,9 +140,9 @@ public abstract class PythonObject implements Serializable {
 	 * @return
 	 */
 	public synchronized PythonObject get(String key, PythonObject localContext) {
-		if (!fields.containsKey(key))
-			return null;
 		AugumentedPythonObject field = fields.get(key);
+		if (field == null)
+			return null;
 		if (field.restrictions == AccessRestrictions.PRIVATE && !isPrivate(localContext, field))
 			throw Utils.throwException("AttributeError", "access to field '" + key + "' is restricted for type '" + 
 					Utils.run("str", Utils.run("type", this)) + "'");

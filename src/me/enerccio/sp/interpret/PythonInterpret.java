@@ -654,11 +654,12 @@ public class PythonInterpret extends PythonObject {
 			apo = value.fields.get("__getattribute__"); 
 			if (apo != null) {
 				// There is __getattribute__ defined, call it directly
-				returnee = execute(true, apo.object, null, field);
+				returnee = execute(false, apo.object, null, field);
 				o.accepts_return = true;
 				break;
 			} else {
 				// Try to grab argument normally...
+				value.get(field.value, Utils.peek(currentContext));
 				apo = value.fields.get(field.value);
 				if (apo != null) {
 					stack.push(apo.object);
@@ -668,7 +669,7 @@ public class PythonInterpret extends PythonObject {
 				apo = value.fields.get("__getattr__"); 
 				if (apo != null) {
 					// There is __getattribute__ defined, call it directly
-					returnee = execute(true, apo.object, null, field);
+					returnee = execute(false, apo.object, null, field);
 					o.accepts_return = true;
 					break;
 				}
