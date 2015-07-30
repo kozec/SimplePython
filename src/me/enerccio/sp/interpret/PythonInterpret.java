@@ -23,6 +23,7 @@ import me.enerccio.sp.types.base.BoolObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.callables.CallableObject;
+import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.callables.UserMethodObject;
 import me.enerccio.sp.types.iterators.XRangeIterator;
@@ -671,6 +672,9 @@ public class PythonInterpret extends PythonObject {
 					o.accepts_return = true;
 					break;
 				}
+				// if (value.getType() == g
+				if (value instanceof PointerObject)
+					throw Utils.throwException("AttributeError", "java instance of " + ((PointerObject)value).getObject().getClass().getName() + " has no attribute '" + field + "'");
 				throw Utils.throwException("AttributeError", "" + value.getType() + " object has no attribute '" + field + "'");
 			}
 		}
