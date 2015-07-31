@@ -576,18 +576,26 @@ public class PythonRuntime {
 		
 		addException(globals, "BaseException", "Error", false);
 		addException(globals, "Exception", "BaseException", false);
-		addException(globals, "TypeError", "Exception", true);
-		addException(globals, "SyntaxError", "Exception", true);
-		addException(globals, "ValueError", "Exception", true);
-		addException(globals, "AttributeError", "Exception", true);
-		addException(globals, "ImportError", "Exception", true);
-		addException(globals, "NameError", "Exception", true);
-		addException(globals, "ParseError", "Exception", true);
-		addException(globals, "IndexError", "Exception", true);
-		addException(globals, "InterpretError", "Exception", true);
-		addException(globals, "StopIteration", "Exception", false);
 		addException(globals, "LoopBreak", "Exception", false);
 		addException(globals, "LoopContinue", "Exception", false);
+		addException(globals, "StandardError", "Exception", false);
+		addException(globals, "ArithmeticError", "StandardError", false);
+		addException(globals, "LookupError", "StandardError", false);
+		addException(globals, "EnvironmentError", "StandardError", false);
+		addException(globals, "AttributeError", "StandardError", true);
+		addException(globals, "IOError", "StandardError", true);
+		addException(globals, "ImportError", "StandardError", true);
+		addException(globals, "IndexError", "LookupError", true);
+		addException(globals, "KeyError", "LookupError", true);
+		addException(globals, "KeyboardInterrupt", "BaseException", false);
+		addException(globals, "MemoryError", "StandardError", false);
+		addException(globals, "NameError", "StandardError", false);
+		addException(globals, "RuntimeError", "StandardError", false);
+		addException(globals, "NotImplementedError", "StandardError", false);
+		addException(globals, "StopIteration", "Exception", false);
+		addException(globals, "TypeError", "StandardError", false);
+		addException(globals, "ValueError", "StandardError", false);
+		addException(globals, "GeneratorExit", "Exception", false);
 	}
 
 
