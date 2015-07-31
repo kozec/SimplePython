@@ -80,7 +80,6 @@ import me.enerccio.sp.types.types.TypeObject;
 import me.enerccio.sp.types.types.TypeTypeObject;
 import me.enerccio.sp.types.types.XRangeTypeObject;
 import me.enerccio.sp.utils.CastFailedException;
-import me.enerccio.sp.utils.PointerMethodIncompatibleException;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -296,7 +295,6 @@ public class PythonRuntime {
 					e.newObject();
 					e.add(globals);
 					
-					PythonInterpret.interpret.get().currentEnvironment.push(e);
 					PythonObject o;
 					
 					globals.put("None", NoneObject.NONE);
@@ -366,8 +364,6 @@ public class PythonRuntime {
 					
 					PythonCompiler c = new PythonCompiler();
 					CompiledBlockObject builtin = c.doCompile(p.file_input(), globals, "builtin", NoneObject.NONE);
-					
-					PythonInterpret.interpret.get().currentEnvironment.pop();
 					
 					PythonInterpret.interpret.get().executeBytecode(builtin);
 					while (true){
