@@ -568,10 +568,8 @@ public class PythonInterpret extends PythonObject {
 			String s1 = ((StringObject)o.compiled.getConstant(o.nextInt())).value;
 			String s2 = ((StringObject)o.compiled.getConstant(o.nextInt())).value;
 			ModuleObject mm = (ModuleObject) 
-				environment().get(new StringObject(ModuleObject.__THISMODULE__), true, false);
-			String resolvePath = mm != null ? (mm.provider.getPackageResolve() != null ? mm.provider.getPackageResolve() : "") : "";
-			resolvePath += resolvePath.equals("") ? s2 : "." + s2;
-			pythonImport(environment(), s1, resolvePath, null, mm == null ? null : mm.injectedGlobals);
+					environment().get(new StringObject(ModuleObject.__THISMODULE__), true, false);
+			pythonImport(environment(), s1, s2, null, mm == null ? null : mm.injectedGlobals);
 			break;
 		case SWAP_STACK: {
 			// swaps head of the stack with value below it
@@ -855,12 +853,17 @@ public class PythonInterpret extends PythonObject {
 			modulePath = modulePath.replaceFirst(mm, "");
 			modulePath = modulePath.replaceFirst("\\.", "");
 			if (target == null){
-				//target = (ModuleObject) environment.get(new StringObject(mm), false, false);
-				//if (target == null)
-				synchronized (PythonRuntime.runtime){
-					target = PythonRuntime.runtime.root.get(mm);
-					if (target == null)
-						target = PythonRuntime.runtime.getModule(mm, null, injectGlobals);
+				target = environment.get(new StringObject(mm), false, false);
+				if (target == null || !(target instanceof ModuleObject)){
+					ModuleObject thisModule = (ModuleObject) environment.get(new StringObject("__thismodule__"), true, false);
+					target = null;
+					synchronized (PythonRuntime.runtime){
+						String resolvePath = thisModule == null ? null : thisModule.provider.getPackageResolve();
+						if (resolvePath == null)
+							target = PythonRuntime.runtime.root.get(mm);
+						if (target == null)
+							target = PythonRuntime.runtime.getModule(mm, resolvePath == null ? null : new StringObject(resolvePath), injectGlobals);
+					}
 				}
 			} else {
 				if (target instanceof ModuleObject){
