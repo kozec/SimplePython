@@ -17,6 +17,9 @@
  */
 package me.enerccio.sp.types;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.interpret.PythonInterpret;
@@ -39,6 +42,7 @@ public class ModuleObject extends PythonObject {
 	public static final String __DICT__ = "__dict__";
 	public static final String __THISMODULE__ = "__thismodule__";
 	private DictObject globals;
+	public Map<String, PythonObject> injectedGlobals = null;
 
 	public ModuleObject(DictObject globals, ModuleProvider provider) {
 		this.provider = provider;
@@ -74,7 +78,10 @@ public class ModuleObject extends PythonObject {
 	}
 	
 	public void injectGlobal(String key, PythonObject value) {
+		if (injectedGlobals == null)
+			injectedGlobals = new HashMap<String, PythonObject>();
 		globals.put(key, value);
+		injectedGlobals.put(key, value);
 	}
 	
 	@Override

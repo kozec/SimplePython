@@ -194,7 +194,7 @@ public class PythonRuntime {
 	 */
 	public synchronized ModuleObject getRoot(String key) {
 		if (!root.containsKey(key)){
-			root.put(key, getModule(key, null));
+			root.put(key, getModule(key, null, null));
 		}
 		return root.get(key);
 	}
@@ -210,7 +210,7 @@ public class PythonRuntime {
 		int index = name.lastIndexOf(".");
 		if (index > -1)
 			name = name.substring(0, index);
-		return loadModule(new ModuleProvider(name, filename, source, "whattheunhollyfuck"));
+		return loadModule(new ModuleProvider(name, filename, source, ""));
 	}
 	
 	/**
@@ -230,7 +230,7 @@ public class PythonRuntime {
 	 * @param moduleResolvePath
 	 * @return
 	 */
-	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath){
+	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, Map<String, PythonObject> injectGlobals){
 		if (moduleResolvePath == null)
 			moduleResolvePath = new StringObject("");
 		ModuleObject mo = resolveModule(name, moduleResolvePath);
@@ -240,6 +240,9 @@ public class PythonRuntime {
 		mo.newObject();
 		if (pp.equals(""))
 			root.put(name, mo);
+		if (injectGlobals != null)
+			for (String k : injectGlobals.keySet())
+				mo.injectGlobal(k, injectGlobals.get(k));
 		mo.initModule();
 		return mo;
 	}
