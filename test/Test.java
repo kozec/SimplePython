@@ -7,6 +7,7 @@ import java.util.Map;
 
 import me.enerccio.sp.SimplePython;
 import me.enerccio.sp.interpret.PythonPathResolver;
+import me.enerccio.sp.utils.Coerce;
 
 
 public class Test {
@@ -32,12 +33,12 @@ public class Test {
 				ill.add(ill2);
 			}
 			System.out.println(SimplePython.asTuple(ill));
-			System.out.println(SimplePython.convertJava(ill));
+			System.out.println(Coerce.toPython(ill));
 			
 			Map<String, Integer> mm = new HashMap<String, Integer>();
 			for (int i=0; i<10; i++)
 				mm.put(Integer.toBinaryString(i), i);
-			System.out.println(SimplePython.convertJava(mm));
+			System.out.println(Coerce.toPython(mm));
 			
 			SimplePython.executeFunction("x", "test");
 
