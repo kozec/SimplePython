@@ -645,10 +645,9 @@ public class PythonInterpret extends PythonObject {
 				break;
 			} else {
 				// Try to grab argument normally...
-				value.get(field.value, getLocalContext());
-				apo = value.fields.get(field.value);
-				if (apo != null) {
-					stack.push(apo.object);
+				PythonObject po = value.get(field.value, getLocalContext());
+				if (po != null) {
+					stack.push(po);
 					break;
 				}
 				// ... and if that fails, use __getattr__ if available
@@ -662,6 +661,8 @@ public class PythonInterpret extends PythonObject {
 				// if (value.getType() == g
 				if (value instanceof PointerObject)
 					throw Utils.throwException("AttributeError", "java instance of " + ((PointerObject)value).getObject().getClass().getName() + " has no attribute '" + field + "'");
+				if (value instanceof ModuleObject)
+					throw Utils.throwException("AttributeError", "module '" + ((ModuleObject)value).getField(ModuleObject.__NAME__).toString() + "' has no attribute '" + field + "'");
 				throw Utils.throwException("AttributeError", "" + value.getType() + " object has no attribute '" + field + "'");
 			}
 		}

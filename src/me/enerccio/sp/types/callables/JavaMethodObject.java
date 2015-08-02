@@ -53,7 +53,7 @@ public class JavaMethodObject extends CallableObject {
 		String value();
 	}
 
-	/** Used iternalyy */
+	/** Used internally */
 	private JavaMethodObject(Object caller, Method m, String[] argNames, String pydoc, boolean noTypeConversion){
 		this.caller = caller;
 		this.boundHandle = m;
