@@ -47,7 +47,7 @@ import me.enerccio.sp.utils.Utils;
  */
 public class PythonInterpret extends PythonObject {
 	private static final long serialVersionUID = -8039667108607710165L;
-	public static final boolean TRACE_ENABLED = System.getenv("SPY_ENABLED") != null;
+	public static final boolean TRACE_ENABLED = System.getenv("SPY_TRACE_ENABLED") != null;
 	/** Thread local accessor to the interpret */
 	public static final transient ThreadLocal<PythonInterpret> interpret = new ThreadLocal<PythonInterpret>(){
 
