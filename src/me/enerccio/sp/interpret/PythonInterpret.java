@@ -825,9 +825,7 @@ public class PythonInterpret extends PythonObject {
 		if (modulePath == null || modulePath.equals("")){
 			if (target == null){
 				synchronized (PythonRuntime.runtime){
-					target = PythonRuntime.runtime.root.get(variable);
-					if (target == null)
-						target = PythonRuntime.runtime.getModule(variable, null, injectGlobals);
+					target = PythonRuntime.runtime.getModule(variable, null, injectGlobals);
 				}
 			} else if (!variable.equals("*")){
 				environment.set(new StringObject(variable), 
@@ -863,7 +861,7 @@ public class PythonInterpret extends PythonObject {
 					synchronized (PythonRuntime.runtime){
 						String resolvePath = thisModule == null ? null : thisModule.provider.getPackageResolve();
 						if (resolvePath == null)
-							target = PythonRuntime.runtime.root.get(mm);
+							target = PythonRuntime.runtime.root.get(mm) != null ? PythonRuntime.runtime.root.get(mm).module : null;
 						if (target == null)
 							target = PythonRuntime.runtime.getModule(mm, resolvePath == null ? null : new StringObject(resolvePath), injectGlobals);
 					}
