@@ -1,12 +1,16 @@
 package me.enerccio.sp;
 
+import java.util.Collection;
+
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
+import me.enerccio.sp.interpret.PythonInterpret;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.callables.CallableObject;
 import me.enerccio.sp.types.pointer.PointerFactory;
-import me.enerccio.sp.types.sequences.StringObject;
+import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.utils.Utils;
 
 public class SimplePython {
@@ -37,10 +41,6 @@ public class SimplePython {
 		return r.getModule(pythonPath);
 	}
 	
-	public static void injectGlobals(String key, PythonObject value){
-		r.getGlobals().backingMap.put(new StringObject(key), value);
-	}
-	
 	public static void addExcludePackageOrClass(String path){
 		r.addExcludePackageOrClass(path);
 	}
@@ -54,8 +54,23 @@ public class SimplePython {
 	}
 	
 	public static PythonObject convertJava(Object java){
-		// TODO: add coerce
-		return r.getJavaClass(java.getClass().getName(), java, null);
+		return convertJava(java, java.getClass());
+	}
+	
+	public static PythonObject asTuple(Collection<?> c){
+		PythonObject[] values = new PythonObject[c.size()];
+		int i=0;
+		for (Object o : c){
+			values[i++] = convertJava(o);
+		}
+		
+		TupleObject t = new TupleObject(values);
+		t.newObject();
+		return t;
+	}
+	
+	public static PythonObject convertJava(Object java, Class<?> javaType){
+		return Utils.cast(java, javaType);
 	}
 	
 	public static void setField(PythonObject object, String fieldName, PythonObject value){
@@ -68,5 +83,18 @@ public class SimplePython {
 	
 	public static PythonObject getField(PythonObject o, String fieldName){
 		return o.get(fieldName, null);
+	}
+	
+	public static PythonObject executeFunction(String module, String function){
+		return executeFunction(getModule(module), function);
+	}
+	
+	public static PythonObject executeFunction(ModuleObject module, String function){
+		CallableObject c = (CallableObject) getField(module, function);
+		if (c == null)
+			return null;
+		
+		c.call(new TupleObject(), null);
+		return PythonInterpret.interpret.get().executeAll(0);
 	}
 }
