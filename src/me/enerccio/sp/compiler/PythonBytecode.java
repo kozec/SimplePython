@@ -68,6 +68,28 @@ public class PythonBytecode extends PythonObject {
 		}
 	}
 	
+	public static class OpenLocals extends PythonBytecode {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 438692848919066124L;
+
+		{
+			bytecode = Bytecode.OPEN_LOCALS;
+		}
+	}
+	
+	public static class PushLocals extends PythonBytecode {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 438692848919066015L;
+
+		{
+			bytecode = Bytecode.PUSH_LOCALS;
+		}
+	}
+	
 	public static class Yield extends PythonBytecode {
 		/**
 		 * 
@@ -530,23 +552,6 @@ public class PythonBytecode extends PythonObject {
 
 		{
 			bytecode = Bytecode.SWAP_STACK;
-		}
-	}
-	
-
-	public static class KCall extends PythonBytecode {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -3080128534823197157L;
-
-		{
-			bytecode = Bytecode.KCALL;
-		}
-		
-		@Override
-		protected String doToString() {
-			return String.format("%s(%s)", getOpcode().toString(), intValue);
 		}
 	}
 
