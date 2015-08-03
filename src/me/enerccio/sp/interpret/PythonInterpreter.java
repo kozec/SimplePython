@@ -47,32 +47,32 @@ import me.enerccio.sp.utils.Utils;
  * @author Enerccio
  *
  */
-public class PythonInterpret extends PythonObject {
+public class PythonInterpreter extends PythonObject {
 	private static final long serialVersionUID = -8039667108607710165L;
 	public static final boolean TRACE_ENABLED = System.getenv("SPY_TRACE_ENABLED") != null;
 	/** Thread local accessor to the interpret */
-	public static final transient ThreadLocal<PythonInterpret> interpret = new ThreadLocal<PythonInterpret>(){
+	public static final transient ThreadLocal<PythonInterpreter> interpret = new ThreadLocal<PythonInterpreter>(){
 
 		@Override
-		protected PythonInterpret initialValue() {
+		protected PythonInterpreter initialValue() {
 			try {
 				PythonRuntime.runtime.waitForNewInterpretAvailability();
 			} catch (InterruptedException e){
 				
 			}
 			
-			PythonInterpret i = new PythonInterpret();
+			PythonInterpreter i = new PythonInterpreter();
 			i.newObject();
-			interprets.add(i);
+			interpreters.add(i);
 			return i;
 		}
 		
 	};
 	
 	/** Collection of all interprets created */
-	public static final Set<PythonInterpret> interprets = Collections.synchronizedSet(new HashSet<PythonInterpret>());
+	public static final Set<PythonInterpreter> interpreters = Collections.synchronizedSet(new HashSet<PythonInterpreter>());
 	
-	public PythonInterpret(){
+	public PythonInterpreter(){
 		bind();
 	}
 	
@@ -144,12 +144,12 @@ public class PythonInterpret extends PythonObject {
 				int cfc = currentFrame.size();
 				((CallableObject)callable).call(new TupleObject(args), kwargs);
 				while (true){
-					ExecutionResult res = PythonInterpret.interpret.get().executeOnce();
+					ExecutionResult res = PythonInterpreter.interpret.get().executeOnce();
 					if (res == ExecutionResult.FINISHED || res == ExecutionResult.EOF)
-						if (PythonInterpret.interpret.get().currentFrame.size() == cfc){
-							if (PythonInterpret.interpret.get().exception() != null){
-								PythonObject e = PythonInterpret.interpret.get().exception();
-								PythonInterpret.interpret.get().currentFrame.peekLast().exception = null;
+						if (PythonInterpreter.interpret.get().currentFrame.size() == cfc){
+							if (PythonInterpreter.interpret.get().exception() != null){
+								PythonObject e = PythonInterpreter.interpret.get().exception();
+								PythonInterpreter.interpret.get().currentFrame.peekLast().exception = null;
 								throw new PythonExecutionException(e);
 							}
 							return returnee;

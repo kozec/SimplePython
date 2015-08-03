@@ -3,7 +3,7 @@ package me.enerccio.sp;
 import java.util.Collection;
 
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
-import me.enerccio.sp.interpret.PythonInterpret;
+import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.ModuleObject;
@@ -95,6 +95,6 @@ public class SimplePython {
 			return null;
 		
 		c.call(new TupleObject(), null);
-		return PythonInterpret.interpret.get().executeAll(0);
+		return PythonInterpreter.interpret.get().executeAll(0);
 	}
 }

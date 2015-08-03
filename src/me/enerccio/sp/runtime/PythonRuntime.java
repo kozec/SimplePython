@@ -40,7 +40,7 @@ import me.enerccio.sp.interpret.NoGetattrException;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
 import me.enerccio.sp.interpret.PythonException;
 import me.enerccio.sp.interpret.PythonExecutionException;
-import me.enerccio.sp.interpret.PythonInterpret;
+import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.parser.pythonParser;
 import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.ModuleObject;
@@ -125,7 +125,7 @@ public class PythonRuntime {
 	 * @param i
 	 * @throws InterruptedException
 	 */
-	public void waitIfSaving(PythonInterpret i) throws InterruptedException {
+	public void waitIfSaving(PythonInterpreter i) throws InterruptedException {
 		if (!isSaving)
 			return;
 		if (!i.isInterpretStoppable())
@@ -145,7 +145,7 @@ public class PythonRuntime {
 	 */
 	public synchronized String serializeRuntime() throws Exception{
 		allowedNewInterpret = false;
-		int numInterprets = PythonInterpret.interprets.size();
+		int numInterprets = PythonInterpreter.interpreters.size();
 		awaitBarrierEntry = new CyclicBarrier(numInterprets + 1); // include self
 		awaitBarrierExit = new CyclicBarrier(numInterprets + 1); // include self
 		isSaving = true;
@@ -409,9 +409,9 @@ public class PythonRuntime {
 					PythonCompiler c = new PythonCompiler();
 					CompiledBlockObject builtin = c.doCompile(p.file_input(), globals, "builtin", NoneObject.NONE);
 					
-					PythonInterpret.interpret.get().executeBytecode(builtin);
+					PythonInterpreter.interpret.get().executeBytecode(builtin);
 					while (true){
-						ExecutionResult r = PythonInterpret.interpret.get().executeOnce();
+						ExecutionResult r = PythonInterpreter.interpret.get().executeOnce();
 						if (r == ExecutionResult.OK)
 							continue;
 						if (r == ExecutionResult.FINISHED)
@@ -428,10 +428,10 @@ public class PythonRuntime {
 	
 	
 	protected static PythonObject apply(PythonObject callable, ListObject args){
-		int cfc = PythonInterpret.interpret.get().currentFrame.size();
+		int cfc = PythonInterpreter.interpret.get().currentFrame.size();
 		TupleObject a = (TupleObject) Utils.list2tuple(args.objects);
-		PythonInterpret.interpret.get().execute(false, callable, null, a.getObjects());
-		return PythonInterpret.interpret.get().executeAll(cfc);
+		PythonInterpreter.interpret.get().execute(false, callable, null, a.getObjects());
+		return PythonInterpreter.interpret.get().executeAll(cfc);
 	}
 	
 	protected static PythonObject chr(IntObject i){
@@ -486,9 +486,9 @@ public class PythonRuntime {
 					System.out.print(" ");
 			}
 		} else {
-			int cfc = PythonInterpret.interpret.get().currentFrame.size();
+			int cfc = PythonInterpreter.interpret.get().currentFrame.size();
 			Utils.run("str", a);
-			PythonObject ret = PythonInterpret.interpret.get().executeAll(cfc);
+			PythonObject ret = PythonInterpreter.interpret.get().executeAll(cfc);
 			System.out.print(Utils.run("str", ret));
 		}
 		return NoneObject.NONE;
@@ -564,10 +564,10 @@ public class PythonRuntime {
 		if (!attribute.equals(ClassInstanceObject.__GETATTRIBUTE__)){
 				PythonObject getattr = getattr(o, ClassInstanceObject.__GETATTRIBUTE__, true);
 				if (getattr != null)
-					return PythonInterpret.interpret.get().execute(false, getattr, null, new StringObject(attribute));
+					return PythonInterpreter.interpret.get().execute(false, getattr, null, new StringObject(attribute));
 		}
 		
-		PythonObject value = o.get(attribute, PythonInterpret.interpret.get().getLocalContext());
+		PythonObject value = o.get(attribute, PythonInterpreter.interpret.get().getLocalContext());
 		if (value == null){
 			if (skip == true)
 				return null;
@@ -578,7 +578,7 @@ public class PythonRuntime {
 			accessorGetattr.get().push(o);
 			try {
 				PythonObject getattr = getattr(o, ClassInstanceObject.__GETATTR__);
-				value = PythonInterpret.interpret.get().execute(false, getattr, null, new StringObject(attribute));
+				value = PythonInterpreter.interpret.get().execute(false, getattr, null, new StringObject(attribute));
 			} catch (NoGetattrException e) {
 				throw Utils.throwException("AttributeError", String.format("%s object has no attribute '%s'", o, attribute));
 			} finally {
@@ -590,7 +590,7 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject hasattr(PythonObject o, String attribute) {
-		PythonObject value = o.get(attribute, PythonInterpret.interpret.get().getLocalContext());
+		PythonObject value = o.get(attribute, PythonInterpreter.interpret.get().getLocalContext());
 		return value == null ? BoolObject.FALSE : BoolObject.TRUE;
 	}
 	
@@ -599,13 +599,13 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject setattr(PythonObject o, String attribute, PythonObject v){
-		if (o.get("__setattr__", PythonInterpret.interpret.get().getLocalContext()) != null){
-			return PythonInterpret.interpret.get().execute(false, o.get("__setattr__", PythonInterpret.interpret.get().getLocalContext()),
+		if (o.get("__setattr__", PythonInterpreter.interpret.get().getLocalContext()) != null){
+			return PythonInterpreter.interpret.get().execute(false, o.get("__setattr__", PythonInterpreter.interpret.get().getLocalContext()),
 					null, new StringObject(attribute), v);
 		}
-		if (o.get(attribute, PythonInterpret.interpret.get().getLocalContext()) == null)
-			o.create(attribute, attribute.startsWith("__") && !attribute.endsWith("__") ? AccessRestrictions.PRIVATE : AccessRestrictions.PUBLIC, PythonInterpret.interpret.get().getLocalContext());
-		o.set(attribute, PythonInterpret.interpret.get().getLocalContext(), v);
+		if (o.get(attribute, PythonInterpreter.interpret.get().getLocalContext()) == null)
+			o.create(attribute, attribute.startsWith("__") && !attribute.endsWith("__") ? AccessRestrictions.PRIVATE : AccessRestrictions.PUBLIC, PythonInterpreter.interpret.get().getLocalContext());
+		o.set(attribute, PythonInterpreter.interpret.get().getLocalContext(), v);
 		return NoneObject.NONE;
 	}
 	
