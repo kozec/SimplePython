@@ -24,22 +24,6 @@ public class Test {
 			
 			SimplePython.getModule("x");
 			c2 = System.currentTimeMillis();
-			
-			List<List<Integer>> ill = new ArrayList<List<Integer>>();
-			for (int i=0; i<10; i++){
-				List<Integer> ill2 = new ArrayList<Integer>();
-				for (int j=0; j<10; j++)
-					ill2.add(j);
-				ill.add(ill2);
-			}
-			System.out.println(SimplePython.asTuple(ill));
-			System.out.println(Coerce.toPython(ill));
-			
-			Map<String, Integer> mm = new HashMap<String, Integer>();
-			for (int i=0; i<10; i++)
-				mm.put(Integer.toBinaryString(i), i);
-			System.out.println(Coerce.toPython(mm));
-			
 			SimplePython.executeFunction("x", "test");
 
 		} finally {
