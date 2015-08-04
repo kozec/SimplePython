@@ -227,7 +227,7 @@ public class JavaMethodObject extends CallableObject {
 			}
 		} catch (CastFailedException e){
 			if ((argNames == null) || (i >= argNames.length))
-				throw new PointerMethodIncompatibleException(toString() + " cannot convert value for argument " + i);
+				throw new PointerMethodIncompatibleException(toString() + " cannot convert value for argument " + i, e);
 			else
 				throw new PointerMethodIncompatibleException(toString() + " cannot convert value for argument '" + argNames[i] + "'", e);
 		}

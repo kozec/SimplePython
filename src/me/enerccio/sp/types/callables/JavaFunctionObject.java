@@ -19,6 +19,9 @@ package me.enerccio.sp.types.callables;
 
 import java.lang.reflect.Method;
 
+import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.utils.Utils;
+
 /**
  * Java function wrapped into callable object.
  * @author Enerccio
@@ -58,5 +61,13 @@ public class JavaFunctionObject extends JavaMethodObject {
 
 	public void setWrappedMethod(boolean isWrappedMethod) {
 		this.isWrappedMethod = isWrappedMethod;
+	}
+	
+	public UserMethodObject bindToObject(PythonObject self) {
+		UserMethodObject n = new UserMethodObject();
+		n.newObject();
+		Utils.putPublic(n, UserMethodObject.SELF, self);
+		Utils.putPublic(n, UserMethodObject.FUNC, this);
+		return n;
 	}
 }

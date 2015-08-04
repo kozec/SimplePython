@@ -47,7 +47,7 @@ public class StringTypeObject extends TypeObject {
 			throw Utils.throwException("TypeError", "str(): incorrect number of parameters");
 		
 		PythonObject o = args.getObjects()[0];
-		if (o instanceof ClassInstanceObject){
+		if (o.get("__str__", null) != null) {
 			int cfc = PythonInterpreter.interpreter.get().currentFrame.size();
 			Utils.run("getattr", args.getObjects()[0], new StringObject("__str__"));
 			PythonObject ret = PythonInterpreter.interpreter.get().executeAll(cfc);
