@@ -18,7 +18,9 @@
 package me.enerccio.sp.types.pointer;
 
 import me.enerccio.sp.types.AccessRestrictions;
+import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -51,6 +53,12 @@ public class PointerObject extends PythonObject {
 		return pointed.hashCode();
 	}
 
+	/** Adds field. Note that calling normal set or setattr on PointerObject is not allowed */ 
+	public void setField(String key, PythonObject value) {
+		AugumentedPythonObject field = new AugumentedPythonObject(value, AccessRestrictions.PUBLIC);
+		fields.put(key, field);
+	}
+	
 	@Override
 	public PythonObject set(String key, PythonObject localContext, PythonObject value) {
 		if (!fields.containsKey(key))
@@ -61,8 +69,9 @@ public class PointerObject extends PythonObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
 
 	@Override

@@ -117,10 +117,10 @@ public class CompiledBlockObject extends PythonObject {
 	}
 	
 	@Override
-	public synchronized void create(String key, me.enerccio.sp.types.AccessRestrictions restrictions, PythonObject currentContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
-
 
 	@Override
 	public boolean truthValue() {

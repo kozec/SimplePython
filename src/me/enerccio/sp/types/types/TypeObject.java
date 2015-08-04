@@ -18,7 +18,6 @@
 package me.enerccio.sp.types.types;
 
 import me.enerccio.sp.interpret.KwArgs;
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
 import me.enerccio.sp.types.base.NoneObject;
@@ -47,8 +46,9 @@ public abstract class TypeObject extends ClassObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
 	
 	@Override

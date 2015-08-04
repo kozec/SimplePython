@@ -24,7 +24,6 @@ import java.lang.reflect.Method;
 
 import me.enerccio.sp.interpret.PythonExecutionException;
 import me.enerccio.sp.interpret.KwArgs;
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.sequences.StringObject;
@@ -273,8 +272,9 @@ public class JavaMethodObject extends CallableObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
 
 	@Override

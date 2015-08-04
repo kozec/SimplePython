@@ -44,7 +44,6 @@ import me.enerccio.sp.interpret.PythonException;
 import me.enerccio.sp.interpret.PythonExecutionException;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.parser.pythonParser;
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
@@ -653,7 +652,8 @@ public class PythonRuntime {
 					null, new StringObject(attribute), v);
 		}
 		if (o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext()) == null)
-			o.create(attribute, attribute.startsWith("__") && !attribute.endsWith("__") ? AccessRestrictions.PRIVATE : AccessRestrictions.PUBLIC, PythonInterpreter.interpreter.get().getLocalContext());
+			if (attribute.startsWith("__") && !attribute.endsWith("__"))
+				o.setPrivate(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 		o.set(attribute, PythonInterpreter.interpreter.get().getLocalContext(), v);
 		return NoneObject.NONE;
 	}

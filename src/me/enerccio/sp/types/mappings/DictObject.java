@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import me.enerccio.sp.interpret.KwArgs;
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.ContainerObject;
 import me.enerccio.sp.types.base.IntObject;
@@ -86,8 +85,9 @@ public class DictObject extends ContainerObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
 
 	// Internal use only

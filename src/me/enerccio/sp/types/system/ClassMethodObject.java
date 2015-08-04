@@ -17,7 +17,6 @@
  */
 package me.enerccio.sp.types.system;
 
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.utils.Utils;
 
@@ -46,8 +45,9 @@ public class ClassMethodObject extends PythonObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
 
 	@Override

@@ -143,11 +143,11 @@ public abstract class PythonObject implements Serializable {
 	 * @param value
 	 * @return
 	 */
-	public synchronized PythonObject set(String key, PythonObject localContext,
-			PythonObject value){
+	public synchronized PythonObject set(String key, PythonObject localContext, PythonObject value){
 		if (!fields.containsKey(key))
-			throw Utils.throwException("AttributeError", "'" + 
-					Utils.run("str", Utils.run("type", this)) + "' object has no attribute '" + key + "'");
+			if (!create(key))
+				throw Utils.throwException("AttributeError", "'" + 
+						Utils.run("str", Utils.run("type", this)) + "' object has no attribute '" + key + "'");
 		AugumentedPythonObject field = fields.get(key);
 		if (field.restrictions == AccessRestrictions.PRIVATE && !isPrivate(localContext, field))
 			throw Utils.throwException("AttributeError", "access to field '" + key + "' is restricted for type '" + 
@@ -176,17 +176,21 @@ public abstract class PythonObject implements Serializable {
 	}
 
 	/**
-	 * Creates new empty field with restrictions and context
-	 * @param key
-	 * @param restrictions
-	 * @param currentContext
+	 * Creates new empty field. Should return false if creating fields is not allowed
 	 */
-	public synchronized void create(String key, AccessRestrictions restrictions, PythonObject currentContext){
+	protected synchronized boolean create(String key) {
 		if (fields.containsKey(key))
-			throw Utils.throwException("AttributeError", "'" + 
-					Utils.run("str", Utils.run("type", this)) + "' object already has a attribute '" + key + "'");
-		AugumentedPythonObject field = new AugumentedPythonObject(NoneObject.NONE, restrictions, currentContext);
+			throw Utils.throwException("AttributeError", "'" + Utils.run("str", Utils.run("type", this)) + "' object already has a attribute '" + key + "'");
+		AugumentedPythonObject field = new AugumentedPythonObject(NoneObject.NONE, AccessRestrictions.PUBLIC);
 		fields.put(key, field);
+		return true;
+	}
+
+	/** Marks field as private */
+	final public void setPrivate(String key, PythonObject owner) {
+		if (!fields.containsKey(key))
+			throw Utils.throwException("AttributeError", "'" + Utils.run("str", Utils.run("type", this)) + "' object already has a attribute '" + key + "'");
+		fields.put(key, new AugumentedPythonObject(fields.get(key).object, AccessRestrictions.PRIVATE, owner));
 	}
 	
 	@Override

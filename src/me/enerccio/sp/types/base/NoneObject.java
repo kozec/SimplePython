@@ -17,9 +17,7 @@
  */
 package me.enerccio.sp.types.base;
 
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.PythonObject;
-import me.enerccio.sp.types.types.TypeTypeObject;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -58,8 +56,9 @@ public class NoneObject extends PythonObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
 
 	@Override

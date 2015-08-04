@@ -20,7 +20,6 @@ package me.enerccio.sp.types.sequences;
 import java.util.HashMap;
 import java.util.Map;
 
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.Arithmetics;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.ContainerObject;
@@ -84,10 +83,11 @@ public abstract class SequenceObject extends ContainerObject {
 	}
 
 	@Override
-	public void create(String key, AccessRestrictions restrictions, PythonObject localContext) {
-		
+	protected synchronized boolean create(String key) {
+		// Can't create fields here
+		return false;
 	}
-	
+
 	/**
 	 * Converts slice object into int[4] object
 	 * @param size
