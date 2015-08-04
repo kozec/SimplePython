@@ -26,6 +26,7 @@ import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.callables.CallableObject;
 import me.enerccio.sp.types.pointer.PointerFactory;
+import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.utils.Coerce;
 
@@ -37,7 +38,7 @@ public class SimplePython {
 		r = PythonRuntime.runtime;
 	}
 
-	public static void addResolve(PythonDataSourceResolver resolver){
+	public static void addResolver(PythonDataSourceResolver resolver){
 		r.addResolver(resolver);
 	}
 	
@@ -101,4 +102,17 @@ public class SimplePython {
 		c.call(new TupleObject(), null);
 		return PythonInterpreter.interpreter.get().executeAll(0);
 	}
+	
+	public static void addFinalizer(Class<?> cls, PointerFinalizer finalizer){
+		addFinalizer(cls.getName(), finalizer);
+	}
+
+	public static void addFinalizer(String name, PointerFinalizer finalizer) {
+		r.addPointerFinalizer(name, finalizer);
+	}
+
+	public static PythonRuntime getRuntime() {
+		return r;
+	}
+	
 }

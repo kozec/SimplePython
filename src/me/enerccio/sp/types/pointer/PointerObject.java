@@ -52,8 +52,7 @@ public class PointerObject extends PythonObject {
 	}
 
 	@Override
-	public PythonObject set(String key, PythonObject localContext,
-			PythonObject value) {
+	public PythonObject set(String key, PythonObject localContext, PythonObject value) {
 		if (!fields.containsKey(key))
 			throw Utils.throwException("AttributeError", "'" + 
 					Utils.run("str", Utils.run("type", this)) + "' object has no attribute '" + key + "'");

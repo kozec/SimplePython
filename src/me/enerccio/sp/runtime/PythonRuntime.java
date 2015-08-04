@@ -760,7 +760,7 @@ public class PythonRuntime {
 	private boolean allowAutowraps;
 	private List<String> excludedPackages = new ArrayList<String>();
 	private Map<String, String> aliases = Collections.synchronizedMap(new HashMap<String, String>());
-	private Map<String, PointerFinalizer> augumentors = Collections.synchronizedMap(new TreeMap<String, PointerFinalizer>());
+	private Map<String, PointerFinalizer> finalizers = Collections.synchronizedMap(new TreeMap<String, PointerFinalizer>());
 	
 	/**
 	 * Adds this package into excluded
@@ -770,8 +770,8 @@ public class PythonRuntime {
 		excludedPackages.add(packageOrClass);
 	}
 	
-	public synchronized void addAugumentor(String name, PointerFinalizer augumentor){
-		augumentors.put(name, augumentor);
+	public synchronized void addPointerFinalizer(String name, PointerFinalizer augumentor){
+		finalizers.put(name, augumentor);
 	}
 	
 	/**
@@ -889,8 +889,8 @@ public class PythonRuntime {
 			throw Utils.throwException("TypeError", "javainstance(): no available factory for class " + cls);
 		}
 		PointerObject ptr = factory.doInitialize(o);
-		if (augumentors.containsKey(o.getClass().getName())){
-			return augumentors.get(o.getClass().getName()).finalizePointer(ptr);
+		if (finalizers.containsKey(o.getClass().getName())){
+			return finalizers.get(o.getClass().getName()).finalizePointer(ptr);
 		} else
 			return ptr;
 	}

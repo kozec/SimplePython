@@ -31,12 +31,21 @@ public class JavaFunctionObject extends JavaMethodObject {
 	public JavaFunctionObject(Method m, boolean noTypeConversion) {
 		super(m, noTypeConversion);
 	}
+	
+	public JavaFunctionObject(Class<?> cls, String name, Class<?>... tp) throws NoSuchMethodException, SecurityException {
+		this(cls.getMethod(name, tp), false);
+	}
+
 
 	/** Usable for static methods with default signature */
 	public JavaFunctionObject(Class<?> cls, String name) throws NoSuchMethodException, SecurityException {
 		super(cls, name);
 	}
 
+	public static JavaFunctionObject noArgFunction(Class<?> cls, String name) throws NoSuchMethodException, SecurityException {
+		Method m = cls.getMethod(name);
+		return new JavaFunctionObject(m, false);
+	}
 	
 	@Override
 	protected String doToString() {
