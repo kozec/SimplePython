@@ -22,7 +22,6 @@ import java.util.Collection;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.runtime.PythonRuntime;
-import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.callables.CallableObject;
@@ -83,15 +82,11 @@ public class SimplePython {
 	}
 	
 	public static void setField(PythonObject object, String fieldName, PythonObject value){
-		synchronized (object){
-			if (!object.fields.containsKey(fieldName))
-				object.create(fieldName, AccessRestrictions.PUBLIC, null);
-			object.set(fieldName, null, value);
-		}
+		PythonRuntime.setattr(object, fieldName, value);
 	}
 	
 	public static PythonObject getField(PythonObject o, String fieldName){
-		return o.get(fieldName, null);
+		return PythonRuntime.getattr(o, fieldName);
 	}
 	
 	public static PythonObject executeFunction(String module, String function){

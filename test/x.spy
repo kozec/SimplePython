@@ -1,6 +1,3 @@
-class Anca(object):
-    pass
 
 def test():
-    for x in [1, 1.5, "anca", test, Anca, Anca(), super]:
-        print x, dir(x)
+    print __thismodule__.__dict__
