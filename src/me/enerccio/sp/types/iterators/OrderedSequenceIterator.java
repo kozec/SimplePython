@@ -69,7 +69,7 @@ public class OrderedSequenceIterator extends PythonObject implements InternalIte
 	public PythonObject next() {
 		if (cp >= len)
 			throw Utils.throwException("StopIteration");
-		PythonObject value = PythonInterpreter.interpret.get().execute(false, Utils.get(sequence, SequenceObject.__GETITEM__), null, IntObject.valueOf(cp++));
+		PythonObject value = PythonInterpreter.interpreter.get().execute(false, Utils.get(sequence, SequenceObject.__GETITEM__), null, IntObject.valueOf(cp++));
 		return value;
 	}
 	
@@ -77,7 +77,7 @@ public class OrderedSequenceIterator extends PythonObject implements InternalIte
 	public PythonObject nextInternal() {
 		if (cp >= len)
 			return null;
-		PythonObject value = PythonInterpreter.interpret.get().execute(false, Utils.get(sequence, SequenceObject.__GETITEM__), null, IntObject.valueOf(cp++));
+		PythonObject value = PythonInterpreter.interpreter.get().execute(false, Utils.get(sequence, SequenceObject.__GETITEM__), null, IntObject.valueOf(cp++));
 		return value;
 	}
 

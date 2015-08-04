@@ -24,6 +24,7 @@ import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.callables.CallableObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
+import me.enerccio.sp.types.callables.ClassObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.callables.UserMethodObject;
 import me.enerccio.sp.types.iterators.GeneratorObject;
@@ -50,7 +51,7 @@ public class PythonInterpreter extends PythonObject {
 	private static final long serialVersionUID = -8039667108607710165L;
 	public static final boolean TRACE_ENABLED = System.getenv("SPY_TRACE_ENABLED") != null;
 	/** Thread local accessor to the interpret */
-	public static final transient ThreadLocal<PythonInterpreter> interpret = new ThreadLocal<PythonInterpreter>(){
+	public static final transient ThreadLocal<PythonInterpreter> interpreter = new ThreadLocal<PythonInterpreter>(){
 
 		@Override
 		protected PythonInterpreter initialValue() {
@@ -79,7 +80,7 @@ public class PythonInterpreter extends PythonObject {
 	 * Binds the interpret to this thread
 	 */
 	public void bind(){
-		interpret.set(this);
+		interpreter.set(this);
 	}
 	
 	/** current frame stack. Topmost element represents currently interpreted frame */
@@ -143,12 +144,12 @@ public class PythonInterpreter extends PythonObject {
 				int cfc = currentFrame.size();
 				((CallableObject)callable).call(new TupleObject(args), kwargs);
 				while (true){
-					ExecutionResult res = PythonInterpreter.interpret.get().executeOnce();
+					ExecutionResult res = PythonInterpreter.interpreter.get().executeOnce();
 					if (res == ExecutionResult.FINISHED || res == ExecutionResult.EOF)
-						if (PythonInterpreter.interpret.get().currentFrame.size() == cfc){
-							if (PythonInterpreter.interpret.get().exception() != null){
-								PythonObject e = PythonInterpreter.interpret.get().exception();
-								PythonInterpreter.interpret.get().currentFrame.peekLast().exception = null;
+						if (PythonInterpreter.interpreter.get().currentFrame.size() == cfc){
+							if (PythonInterpreter.interpreter.get().exception() != null){
+								PythonObject e = PythonInterpreter.interpreter.get().exception();
+								PythonInterpreter.interpreter.get().currentFrame.peekLast().exception = null;
 								throw new PythonExecutionException(e);
 							}
 							return returnee;
@@ -288,7 +289,7 @@ public class PythonInterpreter extends PythonObject {
 		if (o == null)
 			return "<last frame>";
 		if (o.debugLine < 0)
-			return "<method-call>";
+			return "<system-frame>";
 		return String.format("<at module %s, line %s, char %s>", o.debugModule, o.debugLine, o.debugInLine);
 	}
 
@@ -636,27 +637,27 @@ public class PythonInterpreter extends PythonObject {
 			}
 			break;
 		case GETATTR: {
-			AugumentedPythonObject apo;
+			PythonObject po;
 			StringObject field = (StringObject) o.compiled.getConstant(o.nextInt());
 			value = stack.pop();	// object to get attribute from
-			apo = value.fields.get("__getattribute__"); 
-			if (apo != null) {
+			po = value.get("__getattribute__", null); 
+			if (po != null) {
 				// There is __getattribute__ defined, call it directly
-				returnee = execute(false, apo.object, null, field);
+				returnee = execute(false, po, null, field);
 				o.accepts_return = true;
 				break;
 			} else {
 				// Try to grab argument normally...
-				PythonObject po = value.get(field.value, getLocalContext());
+				po = value.get(field.value, getLocalContext());
 				if (po != null) {
 					stack.push(po);
 					break;
 				}
 				// ... and if that fails, use __getattr__ if available
-				apo = value.fields.get("__getattr__"); 
-				if (apo != null) {
+				po = value.get("__getattr__", null); 
+				if (po != null) {
 					// There is __getattribute__ defined, call it directly
-					returnee = execute(false, apo.object, null, field);
+					returnee = execute(false, po, null, field);
 					o.accepts_return = true;
 					break;
 				}

@@ -326,6 +326,26 @@ public class PythonRuntime {
 	public static final String CHR = "chr";
 	public static final String ORD = "ord";
 	public static final String APPLY = "apply";
+	
+	/** Some basic types */
+	public static final TypeObject TYPE_TYPE = new TypeTypeObject();
+	public static final TypeObject STRING_TYPE = new StringTypeObject();
+	public static final TypeObject INT_TYPE = new IntTypeObject();
+	public static final TypeObject TUPLE_TYPE = new TupleTypeObject();
+	public static final TypeObject LIST_TYPE = new ListTypeObject();
+	public static final TypeObject DICT_TYPE = new DictTypeObject();
+	public static final TypeObject BOOL_TYPE = new BoolTypeObject();
+	
+	static {
+		TYPE_TYPE.newObject();
+		STRING_TYPE.newObject();
+		INT_TYPE.newObject();
+		TUPLE_TYPE.newObject();
+		LIST_TYPE.newObject();
+		DICT_TYPE.newObject();
+		BOOL_TYPE.newObject();
+	}
+	
 	/**
 	 * Generates globals. This is only done once but then cloned
 	 * @return
@@ -360,33 +380,26 @@ public class PythonRuntime {
 					globals.put(MRO, Utils.staticMethodCall(PythonRuntime.class, MRO, ClassObject.class));
 					globals.put(CHR, Utils.staticMethodCall(PythonRuntime.class, CHR, IntObject.class));
 					globals.put(ORD, Utils.staticMethodCall(PythonRuntime.class, ORD, StringObject.class));
-					globals.put(TypeTypeObject.TYPE_CALL, o = new TypeTypeObject());
-					o.newObject();
-					globals.put(StringTypeObject.STRING_CALL, o = new StringTypeObject());
-					o.newObject();
-					globals.put(IntTypeObject.INT_CALL, o = new IntTypeObject());
-					o.newObject();
+					globals.put(TypeTypeObject.TYPE_CALL, TYPE_TYPE);
+					globals.put(StringTypeObject.STRING_CALL, STRING_TYPE);
+					globals.put(TupleTypeObject.TUPLE_CALL, TUPLE_TYPE);
+					globals.put(ListTypeObject.LIST_CALL, LIST_TYPE);
+					globals.put(DictTypeObject.DICT_CALL, DICT_TYPE);
+					globals.put(IntTypeObject.INT_CALL, INT_TYPE);
+					globals.put(BoolTypeObject.BOOL_CALL, BOOL_TYPE);
 					globals.put(RealTypeObject.REAL_CALL, o = new RealTypeObject());
+					globals.put(FunctionTypeObject.FUNCTION_CALL, o = new FunctionTypeObject());
+					o.newObject();
+					globals.put(MethodTypeObject.METHOD_CALL, o = new MethodTypeObject());
+					o.newObject();
 					o.newObject();
 					globals.put(BytecodeTypeObject.BYTECODE_CALL, o = new BytecodeTypeObject());
-					o.newObject();
-					globals.put(TupleTypeObject.TUPLE_CALL, o = new TupleTypeObject());
-					o.newObject();
-					globals.put(ListTypeObject.LIST_CALL, o = new ListTypeObject());
 					o.newObject();
 					globals.put(ObjectTypeObject.OBJECT_CALL, o = ObjectTypeObject.inst);
 					o.newObject();
 					globals.put(SliceTypeObject.SLICE_CALL, o = new SliceTypeObject());
 					o.newObject();
 					globals.put(JavaInstanceTypeObject.JAVA_CALL, o = new JavaInstanceTypeObject());
-					o.newObject();
-					globals.put(FunctionTypeObject.FUNCTION_CALL, o = new FunctionTypeObject());
-					o.newObject();
-					globals.put(DictTypeObject.DICT_CALL, o = new DictTypeObject());
-					o.newObject();
-					globals.put(MethodTypeObject.METHOD_CALL, o = new MethodTypeObject());
-					o.newObject();
-					globals.put(BoolTypeObject.BOOL_CALL, o = new BoolTypeObject());
 					o.newObject();
 					globals.put(JavaCallableTypeObject.JAVACALLABLE_CALL, o = new JavaCallableTypeObject());
 					o.newObject();
@@ -410,9 +423,9 @@ public class PythonRuntime {
 					PythonCompiler c = new PythonCompiler();
 					CompiledBlockObject builtin = c.doCompile(p.file_input(), globals, "builtin", NoneObject.NONE);
 					
-					PythonInterpreter.interpret.get().executeBytecode(builtin);
+					PythonInterpreter.interpreter.get().executeBytecode(builtin);
 					while (true){
-						ExecutionResult r = PythonInterpreter.interpret.get().executeOnce();
+						ExecutionResult r = PythonInterpreter.interpreter.get().executeOnce();
 						if (r == ExecutionResult.OK)
 							continue;
 						if (r == ExecutionResult.FINISHED)
@@ -429,10 +442,10 @@ public class PythonRuntime {
 	
 	
 	protected static PythonObject apply(PythonObject callable, ListObject args){
-		int cfc = PythonInterpreter.interpret.get().currentFrame.size();
+		int cfc = PythonInterpreter.interpreter.get().currentFrame.size();
 		TupleObject a = (TupleObject) Utils.list2tuple(args.objects);
-		PythonInterpreter.interpret.get().execute(false, callable, null, a.getObjects());
-		return PythonInterpreter.interpret.get().executeAll(cfc);
+		PythonInterpreter.interpreter.get().execute(false, callable, null, a.getObjects());
+		return PythonInterpreter.interpreter.get().executeAll(cfc);
 	}
 	
 	protected static PythonObject chr(IntObject i){
@@ -487,9 +500,9 @@ public class PythonRuntime {
 					System.out.print(" ");
 			}
 		} else {
-			int cfc = PythonInterpreter.interpret.get().currentFrame.size();
+			int cfc = PythonInterpreter.interpreter.get().currentFrame.size();
 			Utils.run("str", a);
-			PythonObject ret = PythonInterpreter.interpret.get().executeAll(cfc);
+			PythonObject ret = PythonInterpreter.interpreter.get().executeAll(cfc);
 			System.out.print(Utils.run("str", ret));
 		}
 		return NoneObject.NONE;
@@ -564,11 +577,11 @@ public class PythonRuntime {
 	protected static PythonObject getattr(PythonObject o, String attribute, boolean skip) {
 		if (!attribute.equals(ClassInstanceObject.__GETATTRIBUTE__)){
 				PythonObject getattr = getattr(o, ClassInstanceObject.__GETATTRIBUTE__, true);
-				if (getattr != null)
-					return PythonInterpreter.interpret.get().execute(false, getattr, null, new StringObject(attribute));
+				if (getattr != null && !(o instanceof ClassObject))
+					return PythonInterpreter.interpreter.get().execute(false, getattr, null, new StringObject(attribute));
 		}
 		
-		PythonObject value = o.get(attribute, PythonInterpreter.interpret.get().getLocalContext());
+		PythonObject value = o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 		if (value == null){
 			if (skip == true)
 				return null;
@@ -579,7 +592,7 @@ public class PythonRuntime {
 			accessorGetattr.get().push(o);
 			try {
 				PythonObject getattr = getattr(o, ClassInstanceObject.__GETATTR__);
-				value = PythonInterpreter.interpret.get().execute(false, getattr, null, new StringObject(attribute));
+				value = PythonInterpreter.interpreter.get().execute(false, getattr, null, new StringObject(attribute));
 			} catch (NoGetattrException e) {
 				throw Utils.throwException("AttributeError", String.format("%s object has no attribute '%s'", o, attribute));
 			} finally {
@@ -591,7 +604,7 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject hasattr(PythonObject o, String attribute) {
-		PythonObject value = o.get(attribute, PythonInterpreter.interpret.get().getLocalContext());
+		PythonObject value = o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 		return value == null ? BoolObject.FALSE : BoolObject.TRUE;
 	}
 	
@@ -600,13 +613,13 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject setattr(PythonObject o, String attribute, PythonObject v){
-		if (o.get("__setattr__", PythonInterpreter.interpret.get().getLocalContext()) != null){
-			return PythonInterpreter.interpret.get().execute(false, o.get("__setattr__", PythonInterpreter.interpret.get().getLocalContext()),
+		if (o.get("__setattr__", PythonInterpreter.interpreter.get().getLocalContext()) != null){
+			return PythonInterpreter.interpreter.get().execute(false, o.get("__setattr__", PythonInterpreter.interpreter.get().getLocalContext()),
 					null, new StringObject(attribute), v);
 		}
-		if (o.get(attribute, PythonInterpreter.interpret.get().getLocalContext()) == null)
-			o.create(attribute, attribute.startsWith("__") && !attribute.endsWith("__") ? AccessRestrictions.PRIVATE : AccessRestrictions.PUBLIC, PythonInterpreter.interpret.get().getLocalContext());
-		o.set(attribute, PythonInterpreter.interpret.get().getLocalContext(), v);
+		if (o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext()) == null)
+			o.create(attribute, attribute.startsWith("__") && !attribute.endsWith("__") ? AccessRestrictions.PRIVATE : AccessRestrictions.PUBLIC, PythonInterpreter.interpreter.get().getLocalContext());
+		o.set(attribute, PythonInterpreter.interpreter.get().getLocalContext(), v);
 		return NoneObject.NONE;
 	}
 	

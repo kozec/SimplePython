@@ -19,6 +19,7 @@ package me.enerccio.sp.types.types;
 
 import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.interpret.KwArgs;
+import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
 import me.enerccio.sp.types.base.ClassInstanceObject;
@@ -102,7 +103,7 @@ public class TypeTypeObject extends TypeObject {
 		return type;
 	}
 
-	private PythonObject getTypeInformation(PythonObject py) {
+	public static PythonObject getTypeInformation(PythonObject py) {
 		if (py instanceof PythonBytecode)
 			return Utils.getGlobal(BytecodeTypeObject.BYTECODE_CALL);
 		if (py instanceof IntObject)
@@ -110,19 +111,19 @@ public class TypeTypeObject extends TypeObject {
 		if (py instanceof RealObject)
 			return Utils.getGlobal(RealTypeObject.REAL_CALL);
 		if (py instanceof ListObject)
-			return Utils.getGlobal(ListTypeObject.LIST_CALL);
+			return PythonRuntime.LIST_TYPE;
 		if (py instanceof ClassInstanceObject)
 			return ((ClassInstanceObject)py).get(ClassObject.__CLASS__, py);
 		if (py instanceof ClassObject)
-			return Utils.getGlobal(TYPE_CALL);
+			return PythonRuntime.TYPE_TYPE;
 		if (py instanceof SliceObject)
 			return Utils.getGlobal(SliceTypeObject.SLICE_CALL);
 		if (py instanceof TupleObject)
-			return Utils.getGlobal(TupleTypeObject.TUPLE_CALL);
+			return PythonRuntime.TUPLE_TYPE;
 		if (py instanceof DictObject)
-			return Utils.getGlobal(DictTypeObject.DICT_CALL);
+			return PythonRuntime.DICT_TYPE;
 		if (py instanceof StringObject)
-			return Utils.getGlobal(StringTypeObject.STRING_CALL);
+			return PythonRuntime.STRING_TYPE;
 		if (py instanceof PointerObject)
 			return Utils.getGlobal(JavaInstanceTypeObject.JAVA_CALL);
 		if (py instanceof UserFunctionObject)
@@ -130,7 +131,7 @@ public class TypeTypeObject extends TypeObject {
 		if (py instanceof UserMethodObject)
 			return Utils.getGlobal(MethodTypeObject.METHOD_CALL);
 		if (py instanceof BoolObject)
-			return Utils.getGlobal(BoolTypeObject.BOOL_CALL);
+			return PythonRuntime.BOOL_TYPE;
 		if (py instanceof JavaMethodObject || py instanceof JavaFunctionObject || py instanceof JavaCongruentAggregatorObject)
 			return Utils.getGlobal(JavaCallableTypeObject.JAVACALLABLE_CALL);
 		if (py instanceof ComplexObject)

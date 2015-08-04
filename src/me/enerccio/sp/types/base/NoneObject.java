@@ -19,6 +19,7 @@ package me.enerccio.sp.types.base;
 
 import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.types.TypeTypeObject;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -38,6 +39,12 @@ public class NoneObject extends PythonObject {
 	@Override
 	public boolean truthValue() {
 		return false;
+	}
+
+	@Override
+	public PythonObject getType(){
+		// TODO: Why? :(
+		return this;
 	}
 
 	@Override

@@ -93,7 +93,7 @@ public class Utils {
 	}
 
 	public static PythonObject run(String function, PythonObject... args) {
-		return PythonInterpreter.interpret.get().executeCall(function, args);
+		return PythonInterpreter.interpreter.get().executeCall(function, args);
 	}
 	
 	/**
@@ -366,9 +366,9 @@ public class Utils {
 	 * @return
 	 */
 	public static PythonObject getGlobal(String variable) {
-		if (PythonInterpreter.interpret.get().currentFrame.size() == 0)
+		if (PythonInterpreter.interpreter.get().currentFrame.size() == 0)
 			return PythonRuntime.runtime.generateGlobals().doGet(variable);
-		return PythonInterpreter.interpret.get().environment().get(new StringObject(variable), true, false);
+		return PythonInterpreter.interpreter.get().environment().get(new StringObject(variable), true, false);
 	}
 
 	/**

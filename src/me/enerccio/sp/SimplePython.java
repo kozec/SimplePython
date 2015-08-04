@@ -87,6 +87,6 @@ public class SimplePython {
 			return null;
 		
 		c.call(new TupleObject(), null);
-		return PythonInterpreter.interpret.get().executeAll(0);
+		return PythonInterpreter.interpreter.get().executeAll(0);
 	}
 }

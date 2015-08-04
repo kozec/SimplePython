@@ -29,6 +29,7 @@ import me.enerccio.sp.types.base.ClassInstanceObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.ClassObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
+import me.enerccio.sp.types.types.TypeTypeObject;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -38,23 +39,17 @@ import me.enerccio.sp.utils.Utils;
  */
 public abstract class PythonObject implements Serializable {
 	private static final long serialVersionUID = 1L;
+	public static final String __CLASS__ = "__class__";
 	
 	public PythonObject(){
 		
 	}
 	
-	/**
-	 * Should be called only once to initialize methods of the object
-	 */
-	public void newObject(){
-		registerObject();
-	}
-	
 	private static Map<String, JavaMethodObject> sfields = new HashMap<String, JavaMethodObject>();
-	
 	static {
 		try {
 			sfields.put(Arithmetics.__EQ__,  new JavaMethodObject(PythonObject.class, "eq", PythonObject.class));
+			sfields.put(Arithmetics.__NE__,  new JavaMethodObject(PythonObject.class, "ne", PythonObject.class));
 			sfields.put(Arithmetics.__NE__,  new JavaMethodObject(PythonObject.class, "ne", PythonObject.class));
 		} catch (Exception e){
 			e.printStackTrace();
@@ -63,6 +58,19 @@ public abstract class PythonObject implements Serializable {
 	
 	protected void bindMethod(String name, JavaMethodObject m) {
 		fields.put(name, new AugumentedPythonObject(m.cloneWithThis(this), AccessRestrictions.PUBLIC));
+	}
+	
+	/**
+	 * Should be called only once to initialize methods of the object
+	 */
+	public void newObject(){
+		registerObject();
+		bindMethods(sfields);
+		if (getType() == null) {
+			getType();
+			throw new RuntimeException("TYPE IS NULL");
+		}
+		Utils.putPublic(this, __CLASS__, getType());
 	}
 
 	protected void bindMethods(Map<String, JavaMethodObject> map) {
@@ -75,7 +83,6 @@ public abstract class PythonObject implements Serializable {
 	 */
 	protected void registerObject(){
 		PythonRuntime.runtime.newInstanceInitialization(this);
-		bindMethods(sfields);
 	}
 	
 	public PythonObject eq(PythonObject other){
@@ -91,7 +98,7 @@ public abstract class PythonObject implements Serializable {
 	 * @return
 	 */
 	public PythonObject getType(){
-		return Utils.run("type", this);
+		return TypeTypeObject.getTypeInformation(this);
 	}
 	
 	/**
