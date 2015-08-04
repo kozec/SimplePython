@@ -53,6 +53,7 @@ import me.enerccio.sp.types.callables.ClassObject;
 import me.enerccio.sp.types.callables.JavaFunctionObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.mappings.DictObject;
+import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.pointer.PointerFactory;
 import me.enerccio.sp.types.pointer.PointerObject;
 import me.enerccio.sp.types.pointer.WrapNoMethodsFactory;
@@ -725,6 +726,7 @@ public class PythonRuntime {
 	private boolean allowAutowraps;
 	private List<String> excludedPackages = new ArrayList<String>();
 	private Map<String, String> aliases = Collections.synchronizedMap(new HashMap<String, String>());
+	private Map<String, PointerFinalizer> augumentors = Collections.synchronizedMap(new TreeMap<String, PointerFinalizer>());
 	
 	/**
 	 * Adds this package into excluded
@@ -732,6 +734,10 @@ public class PythonRuntime {
 	 */
 	public synchronized void addExcludePackageOrClass(String packageOrClass){
 		excludedPackages.add(packageOrClass);
+	}
+	
+	public synchronized void addAugumentor(String name, PointerFinalizer augumentor){
+		augumentors.put(name, augumentor);
 	}
 	
 	/**
@@ -775,7 +781,7 @@ public class PythonRuntime {
 	 * @param args
 	 * @return
 	 */
-	public PointerObject getJavaClass(String cls, Object pointedObject, KwArgs kwargs, PythonObject... args) {
+	public PythonObject getJavaClass(String cls, Object pointedObject, KwArgs kwargs, PythonObject... args) {
 		if (!aliases.containsKey(cls) && !allowAutowraps)
 			throw Utils.throwException("TypeError", "javainstance(): unknown java type '" + cls + "'. Type is not wrapped");
 		if (!aliases.containsKey(cls))
@@ -848,7 +854,11 @@ public class PythonRuntime {
 		if (factory == null){
 			throw Utils.throwException("TypeError", "javainstance(): no available factory for class " + cls);
 		}
-		return factory.doInitialize(o);
+		PointerObject ptr = factory.doInitialize(o);
+		if (augumentors.containsKey(o.getClass().getName())){
+			return augumentors.get(o.getClass().getName()).finalizePointer(ptr);
+		} else
+			return ptr;
 	}
 
 	/**
