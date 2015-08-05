@@ -55,8 +55,8 @@ import me.enerccio.sp.types.callables.JavaFunctionObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.mappings.DictObject;
 import me.enerccio.sp.types.mappings.PythonProxy;
-import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.pointer.PointerFactory;
+import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.pointer.PointerObject;
 import me.enerccio.sp.types.pointer.WrapNoMethodsFactory;
 import me.enerccio.sp.types.sequences.ListObject;
@@ -84,8 +84,8 @@ import me.enerccio.sp.types.types.TypeObject;
 import me.enerccio.sp.types.types.TypeTypeObject;
 import me.enerccio.sp.types.types.XRangeTypeObject;
 import me.enerccio.sp.utils.CastFailedException;
-import me.enerccio.sp.utils.Pair;
 import me.enerccio.sp.utils.Coerce;
+import me.enerccio.sp.utils.Pair;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -300,8 +300,7 @@ public class PythonRuntime {
 	 * @param moduleResolvePath
 	 * @return
 	 */
-	private Pair<ModuleObject, Boolean> resolveModule(String name,
-			StringObject moduleResolvePath) {
+	private Pair<ModuleObject, Boolean> resolveModule(String name, StringObject moduleResolvePath) {
 		ModuleProvider provider = null;
 		for (PythonDataSourceResolver resolver : resolvers){
 			if (provider != null)
@@ -311,6 +310,20 @@ public class PythonRuntime {
 		if (provider != null)
 			return loadModule(provider);
 		return null;
+	}
+	
+	/** 
+	 * Like resolveModule, but returns module provider.
+	 * Return null if module cannot be found.
+	 */
+	public ModuleProvider getModuleSource(String name, String moduleResolvePath) {
+		ModuleProvider provider = null;
+		for (PythonDataSourceResolver resolver : resolvers) {
+			if (provider != null)
+				break;
+			provider = resolver.resolve(name, moduleResolvePath);
+		}
+		return provider;
 	}
 
 	/** stored globals are here */
@@ -427,7 +440,7 @@ public class PythonRuntime {
 					}
 					
 					PythonCompiler c = new PythonCompiler();
-					CompiledBlockObject builtin = c.doCompile(p.file_input(), globals, "builtin", NoneObject.NONE);
+					CompiledBlockObject builtin = c.doCompile(p.file_input(), globals, "builtin", null);
 					
 					PythonInterpreter.interpreter.get().executeBytecode(builtin);
 					while (true){
@@ -668,6 +681,7 @@ public class PythonRuntime {
 		base.backingMap.put(new StringObject("__str__"), str);
 		
 		addException(globals, "BaseException", "Error", false);
+		addException(globals, "SyntaxError", "Error", false);
 		addException(globals, "Exception", "BaseException", false);
 		addException(globals, "LoopBreak", "Exception", false);
 		addException(globals, "LoopContinue", "Exception", false);
