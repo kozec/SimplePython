@@ -7,6 +7,7 @@ import java.util.Map;
 
 import me.enerccio.sp.SimplePython;
 import me.enerccio.sp.interpret.PythonPathResolver;
+import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.utils.Coerce;
 
 
@@ -22,9 +23,10 @@ public class Test {
 			SimplePython.setAllowAutowraps(true);
 			SimplePython.addResolver(PythonPathResolver.make(Paths.get("").toAbsolutePath().toString() + File.separator + "bin"));
 			
-			SimplePython.getModule("x");
+			ModuleObject x = SimplePython.getModule("x");
 			c2 = System.currentTimeMillis();
-			SimplePython.executeFunction("x", "test");
+			if (x.getField("test") != null)
+				SimplePython.executeFunction("x", "test");
 
 		} finally {
 			System.out.println("Took " + (System.currentTimeMillis() - c) + " ms");

@@ -57,8 +57,7 @@ public class ModuleObject extends PythonObject {
 				frame = new PythonCompiler().doCompile(fcx, globals, this);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw Utils.throwException("SyntaxError", "failed to parse source code of " + provider);
+			throw Utils.throwException("SyntaxError", "failed to parse source code of " + provider, e);
 		}
 		globals.backingMap.put(new StringObject(__THISMODULE__), this);
 		globals.backingMap.put(new StringObject(__NAME__), new StringObject(provider.getModuleName()));

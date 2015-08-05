@@ -176,6 +176,8 @@ vararg
 
 label_or_stmt
 : stmt
+| include
+| label
 ;
 
 stmt
@@ -184,6 +186,10 @@ stmt
 
 label
 : nname ':' suite?
+;
+
+include
+: 'include' nname
 ;
 
 simple_stmt

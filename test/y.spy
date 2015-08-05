@@ -1,0 +1,4 @@
+print "modul y 1"
+print "modul y 2"
+anca()
+print "modul y 3"

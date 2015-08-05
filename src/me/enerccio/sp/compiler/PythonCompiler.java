@@ -30,6 +30,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import me.enerccio.sp.compiler.PythonBytecode.Pop;
 import me.enerccio.sp.interpret.CompiledBlockObject;
+import me.enerccio.sp.parser.pythonParser;
 import me.enerccio.sp.parser.pythonParser.And_exprContext;
 import me.enerccio.sp.parser.pythonParser.And_testContext;
 import me.enerccio.sp.parser.pythonParser.ArglistContext;
@@ -66,6 +67,7 @@ import me.enerccio.sp.parser.pythonParser.Import_as_nameContext;
 import me.enerccio.sp.parser.pythonParser.Import_fromContext;
 import me.enerccio.sp.parser.pythonParser.Import_nameContext;
 import me.enerccio.sp.parser.pythonParser.Import_stmtContext;
+import me.enerccio.sp.parser.pythonParser.IncludeContext;
 import me.enerccio.sp.parser.pythonParser.IntegerContext;
 import me.enerccio.sp.parser.pythonParser.Label_or_stmtContext;
 import me.enerccio.sp.parser.pythonParser.LambdefContext;
@@ -103,6 +105,7 @@ import me.enerccio.sp.parser.pythonParser.Xor_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_or_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_stmtContext;
+import me.enerccio.sp.runtime.ModuleProvider;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.Arithmetics;
 import me.enerccio.sp.types.ModuleObject;
@@ -212,7 +215,7 @@ public class PythonCompiler {
 		return doCompile(fcx, dict, m.fields.get(ModuleObject.__NAME__).object.toString(), m);
 	}
 	
-	public CompiledBlockObject doCompile(File_inputContext fcx, DictObject dict, String mn, PythonObject locals) {
+	public CompiledBlockObject doCompile(File_inputContext fcx, DictObject dict, String mn, ModuleObject m) {
 		moduleName = mn;
 		compilingFunction.push(null);
 		
@@ -230,17 +233,8 @@ public class PythonCompiler {
 		cb.mapValue = dict;
 		environments.add(dict);
 		
-		boolean first = true;
-		for (Label_or_stmtContext ls : fcx.label_or_stmt()){
-			if (first){
-				first = false;
-				String docString = getDocstring(ls);
-				docstring.add(docString);
-				if (docString != null)
-					continue;
-			}
-			compile(ls, bytecode, null);
-		}
+		
+		compile(fcx, bytecode, m);
 		
 		compilingClass.pop();
 		stack.pop();
@@ -253,6 +247,20 @@ public class PythonCompiler {
 		
 		compilingFunction.pop();
 		return cob;
+	}
+
+	private void compile(File_inputContext fcx, List<PythonBytecode> bytecode, ModuleObject m) {
+		boolean first = true;
+		for (Label_or_stmtContext ls : fcx.label_or_stmt()){
+			if (first){
+				first = false;
+				String docString = getDocstring(ls);
+				docstring.add(docString);
+				if (docString != null)
+					continue;
+			}
+			compile(ls, bytecode, null, m);
+		}
 	}
 
 	private String getDocstring(Label_or_stmtContext ls) {
@@ -441,10 +449,30 @@ public class PythonCompiler {
 		addBytecode(bytecode, Bytecode.POP, try_stmt.start);
 	}
 
-	private void compile(Label_or_stmtContext ls, List<PythonBytecode> bytecode, ControllStack cs) {
+	private void compile(Label_or_stmtContext ls, List<PythonBytecode> bytecode, ControllStack cs, ModuleObject m) {
+		if (ls.include() != null)
+			compileInclude(ls.include(), bytecode, m);
+		if (ls.label() != null)
+			; // TODO: this
+		else if (ls.stmt() != null)
 			compileStatement(ls.stmt(), bytecode, cs);
 	}
 
+
+	private void compileInclude(IncludeContext include, List<PythonBytecode> bytecode, ModuleObject m) {
+		String filename = include.nname().getText();
+		ModuleProvider toInclude = PythonRuntime.runtime.getModuleSource(filename, m.provider.getPackageResolve());
+		pythonParser parser;
+		try {
+			parser = Utils.parse(toInclude);
+		} catch (Exception e) {
+			throw Utils.throwException("SyntaxError", "failed to parse source code of " + toInclude, e);
+		}
+		String thisModuleName = moduleName;
+		moduleName = filename;
+		compile(parser.file_input(), bytecode, m);
+		moduleName = thisModuleName;
+	}
 
 	private void compileWhile(While_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
 		LoopStackItem lsi = new LoopStackItem(bytecode.size());
