@@ -484,6 +484,9 @@ public class Utils {
 			case LOADGLOBAL:
 				w.writeInt(insertValue(new StringObject(b.stringValue), mmap, rmap));
 				break;
+			case LOADBUILTIN:
+				w.writeInt(insertValue(new StringObject(b.stringValue), mmap, rmap));
+				break;
 			case NOP:
 				break;
 			case POP:

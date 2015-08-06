@@ -126,7 +126,7 @@ public class PythonInterpreter extends PythonObject {
 	public PythonObject executeCall(String function, PythonObject... data) {
 		if (currentFrame.size() == 0)
 			return returnee = execute(false, PythonRuntime.runtime.generateGlobals().doGet(function), null, data);
-		return returnee = execute(false, environment().get(new StringObject(function), false, false), null, data);
+		return returnee = execute(false, environment().getBuiltin(function), null, data);
 	}
 
 	/**
@@ -811,6 +811,14 @@ public class PythonInterpreter extends PythonObject {
 				removeLastFrame();
 				return ExecutionResult.EOF;
 			}
+		case LOADBUILTIN:{
+			String vname = ((StringObject) o.compiled.getConstant(o.nextInt())).value;
+			value = environment().getBuiltin(vname);
+			if (value == null)
+				throw Utils.throwException("NameError", "builtin name '" + vname + "' is undefined");
+			stack.push(value);
+			break;
+		} 
 		default:
 			Utils.throwException("InterpretError", "unhandled bytecode " + opcode.toString());
 		}

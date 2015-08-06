@@ -209,6 +209,7 @@ public class CompiledBlockObject extends PythonObject {
 			case KWARG:
 			case LOAD:
 			case LOADGLOBAL:
+			case LOADBUILTIN:
 			case SAVE:
 			case PUSH:
 			case SAVEGLOBAL:
