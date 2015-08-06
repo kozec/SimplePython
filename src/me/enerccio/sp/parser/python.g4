@@ -190,6 +190,7 @@ label
 
 include
 : 'include' nname
+| 'include' '(' nname ')' 
 ;
 
 simple_stmt
