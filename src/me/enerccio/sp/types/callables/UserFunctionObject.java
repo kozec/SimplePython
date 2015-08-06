@@ -90,7 +90,7 @@ public class UserFunctionObject extends CallableObject {
 		InternalDict a = new StringDictObject();
 		
 		List<PythonObject> vargs = new ArrayList<PythonObject>();
-		for (int i=0; i<oargs.len(); i++){
+		for (int i=0; i<Math.max(oargs.len(), args.len()); i++){
 			if (i < this.args.size())
 				a.putVariable(this.args.get(i), args.getObjects()[i]);
 			else
