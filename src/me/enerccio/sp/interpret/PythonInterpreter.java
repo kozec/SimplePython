@@ -320,6 +320,13 @@ public class PythonInterpreter extends PythonObject {
 	private ExecutionResult executeSingleInstruction(FrameObject o) {
 		int spc = o.pc;
 		o.dataStream.position(spc);
+
+		DebugInformation dd = o.compiled.getDebugInformation(spc);
+
+		o.debugModule = dd.modulename;
+		o.debugLine = dd.lineno;
+		o.debugInLine = dd.charno;
+		
 		Bytecode opcode = o.nextOpcode();
 		Stack<PythonObject> stack = o.stack;
 		
@@ -807,12 +814,6 @@ public class PythonInterpreter extends PythonObject {
 		default:
 			Utils.throwException("InterpretError", "unhandled bytecode " + opcode.toString());
 		}
-		
-		DebugInformation dd = o.compiled.getDebugInformation(spc);
-
-		o.debugModule = dd.modulename;
-		o.debugLine = dd.lineno;
-		o.debugInLine = dd.charno;
 			
 		return ExecutionResult.OK;
 	}
