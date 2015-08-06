@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -460,7 +461,7 @@ public class PythonRuntime {
 	}
 	
 	protected static List<String> dir(PythonObject o){
-		Set<String> fields = new HashSet<String>();
+		Set<String> fields = new TreeSet<String>();
 		
 		synchronized (o){
 			synchronized (o.fields){
