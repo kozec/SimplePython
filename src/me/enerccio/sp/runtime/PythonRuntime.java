@@ -114,6 +114,8 @@ public class PythonRuntime {
 	private CyclicBarrier awaitBarrierExit;
 	private volatile boolean isSaving = false;
 	private volatile boolean allowedNewInterpret = true;
+	public static PythonObject STOP_ITERATION;
+	public static PythonObject GENERATOR_EXIT;
 	
 	/**
 	 * Waits until creation of new interprets is possible
@@ -403,6 +405,7 @@ public class PythonRuntime {
 					globals.put(StringTypeObject.STRING_CALL, STRING_TYPE);
 					globals.put(TupleTypeObject.TUPLE_CALL, TUPLE_TYPE);
 					globals.put(ListTypeObject.LIST_CALL, LIST_TYPE);
+					globals.put(ListTypeObject.MAKE_LIST_CALL, Utils.staticMethodCall(true, ListTypeObject.class, "make_list", TupleObject.class, KwArgs.class));
 					globals.put(DictTypeObject.DICT_CALL, DICT_TYPE);
 					globals.put(IntTypeObject.INT_CALL, INT_TYPE);
 					globals.put(BoolTypeObject.BOOL_CALL, BOOL_TYPE);
@@ -572,7 +575,7 @@ public class PythonRuntime {
 		return NoneObject.NONE;
 	}
 	
-	protected static PythonObject isinstance(PythonObject testee, PythonObject clazz){
+	public static PythonObject isinstance(PythonObject testee, PythonObject clazz){
 		return doIsInstance(testee, clazz, false) ? BoolObject.TRUE : BoolObject.FALSE;
 	}
 
@@ -715,6 +718,8 @@ public class PythonRuntime {
 		addException(globals, "TypeError", "StandardError", false);
 		addException(globals, "ValueError", "StandardError", false);
 		addException(globals, "GeneratorExit", "Exception", false);
+		STOP_ITERATION = globals.getItem("StopIteration");
+		GENERATOR_EXIT = globals.getItem("GeneratorExit");
 	}
 
 
