@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -677,10 +676,10 @@ public class PythonRuntime {
 			return PythonInterpreter.interpreter.get().execute(false, o.get("__setattr__", PythonInterpreter.interpreter.get().getLocalContext()),
 					null, new StringObject(attribute), v);
 		}
-		if (o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext()) == null)
-			if (attribute.startsWith("__") && !attribute.endsWith("__"))
-				o.setPrivate(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 		o.set(attribute, PythonInterpreter.interpreter.get().getLocalContext(), v);
+		if (attribute.startsWith("__") && !attribute.endsWith("__"))
+			if (o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext()) != null)
+				o.setPrivate(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 		return NoneObject.NONE;
 	}
 	

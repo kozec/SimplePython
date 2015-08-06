@@ -168,8 +168,11 @@ public abstract class PythonObject implements Serializable {
 		if (localContext == null)
 			return false;
 		
-		if (localContext instanceof ClassObject && this instanceof ClassInstanceObject){
-			return p.owner == null ? true : (localContext == p.owner);
+		if (this instanceof ClassInstanceObject) {
+			if (localContext instanceof ClassObject){
+				return p.owner == null ? true : (localContext == p.owner);
+			}
+			return false;
 		}
 		
 		return true;
@@ -189,7 +192,7 @@ public abstract class PythonObject implements Serializable {
 	/** Marks field as private */
 	final public void setPrivate(String key, PythonObject owner) {
 		if (!fields.containsKey(key))
-			throw Utils.throwException("AttributeError", "'" + Utils.run("str", Utils.run("type", this)) + "' object already has a attribute '" + key + "'");
+			throw Utils.throwException("AttributeError", "'" + Utils.run("str", Utils.run("type", this)) + "' object has no attribute '" + key + "'");
 		fields.put(key, new AugumentedPythonObject(fields.get(key).object, AccessRestrictions.PRIVATE, owner));
 	}
 	
