@@ -29,7 +29,6 @@ import me.enerccio.sp.types.base.ClassInstanceObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.ClassObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
-import me.enerccio.sp.types.types.TypeTypeObject;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -98,7 +97,7 @@ public abstract class PythonObject implements Serializable {
 	 * @return
 	 */
 	public PythonObject getType(){
-		return TypeTypeObject.getTypeInformation(this);
+		return PythonRuntime.getType(this);
 	}
 	
 	/**

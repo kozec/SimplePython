@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import sun.net.www.protocol.http.HttpURLConnection.TunnelState;
 import me.enerccio.sp.compiler.Bytecode;
 import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.compiler.PythonBytecode.*;
@@ -423,8 +424,7 @@ public class PythonInterpreter extends PythonObject {
 			FrameObject frame = (FrameObject) stack.pop();
 			jv = o.nextInt();
 			if (frame.exception != null) {
-				PythonObject stype = environment().get(new StringObject("StopIteration"), true, false);
-				if (Utils.run("isinstance", frame.exception, stype).truthValue()) {
+				if (PythonRuntime.isinstance(frame.exception, PythonRuntime.STOP_ITERATION).truthValue()) {
 					o.pc = jv;
 					o.exception = frame.exception = null;
 					break;
@@ -624,7 +624,6 @@ public class PythonInterpreter extends PythonObject {
 			PythonObject seq = stack.pop();
 			PythonObject iterator;
 			PythonObject[] ss = new PythonObject[o.nextInt()];
-			PythonObject stype = environment().get(new StringObject("StopIteration"), true, false);
 			
 			try {
 				Utils.run("iter", seq);
@@ -639,7 +638,7 @@ public class PythonInterpreter extends PythonObject {
 					ss[i] = returnee;
 				}
 			} catch (PythonExecutionException e){
-				if (Utils.run("isinstance", e.getException(), stype).truthValue()){
+				if (PythonRuntime.isinstance(e.getException(), PythonRuntime.STOP_ITERATION).truthValue()){
 					throw Utils.throwException("ValueError", "too few values to unpack");
 				} else
 					throw e;
@@ -651,7 +650,7 @@ public class PythonInterpreter extends PythonObject {
 					executeAll(cfc);
 				throw Utils.throwException("ValueError", "too many values to unpack");
 			} catch (PythonExecutionException e){
-				if (!Utils.run("isinstance", e.getException(), stype).truthValue()){
+				if (!Utils.run("isinstance", e.getException(), PythonRuntime.STOP_ITERATION).truthValue()){
 					throw e;
 				}
 			}
@@ -730,8 +729,7 @@ public class PythonInterpreter extends PythonObject {
 			break;
 		case RAISE: {
 			// raises python exception
-			PythonObject s;
-			s = stack.pop();
+			PythonObject s = Utils.peek(stack);
 			if (s == null)
 				throw Utils.throwException("InterpretError", "no exception is being handled but raise called");
 			throw new PythonExecutionException(s);

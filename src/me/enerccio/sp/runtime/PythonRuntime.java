@@ -32,6 +32,7 @@ import java.util.TreeSet;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
+import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.interpret.EnvironmentObject;
@@ -48,11 +49,18 @@ import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
 import me.enerccio.sp.types.base.ClassInstanceObject;
+import me.enerccio.sp.types.base.ComplexObject;
 import me.enerccio.sp.types.base.IntObject;
 import me.enerccio.sp.types.base.NoneObject;
+import me.enerccio.sp.types.base.RealObject;
+import me.enerccio.sp.types.base.SliceObject;
+import me.enerccio.sp.types.callables.BoundHandleObject;
 import me.enerccio.sp.types.callables.ClassObject;
+import me.enerccio.sp.types.callables.JavaCongruentAggregatorObject;
 import me.enerccio.sp.types.callables.JavaFunctionObject;
+import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
+import me.enerccio.sp.types.callables.UserMethodObject;
 import me.enerccio.sp.types.mappings.DictObject;
 import me.enerccio.sp.types.mappings.PythonProxy;
 import me.enerccio.sp.types.pointer.PointerFactory;
@@ -114,6 +122,7 @@ public class PythonRuntime {
 	private CyclicBarrier awaitBarrierExit;
 	private volatile boolean isSaving = false;
 	private volatile boolean allowedNewInterpret = true;
+	public static PythonObject ERROR;
 	public static PythonObject STOP_ITERATION;
 	public static PythonObject GENERATOR_EXIT;
 	public static PythonObject INDEX_ERROR;
@@ -595,8 +604,8 @@ public class PythonRuntime {
 			return false;
 		}
 		
-		if (clazz instanceof TypeObject){
-			return Utils.run("type", testee).equals(clazz);
+		if (clazz instanceof TypeObject) {
+			clazz.equals(getType(testee));
 		}
 		
 		throw Utils.throwException("TypeError", "isinstance() arg 2 must be a class, type, or tuple of classes and types");
@@ -609,6 +618,45 @@ public class PythonRuntime {
 		}
 		ClassObject cls = (ClassObject) Utils.get(testee, "__class__");
 		return checkClassAssignable(cls, clazz);
+	}
+	
+	public static PythonObject getType(PythonObject py) {
+		if (py instanceof PythonBytecode)
+			return Utils.getGlobal(BytecodeTypeObject.BYTECODE_CALL);
+		if (py instanceof IntObject)
+			return Utils.getGlobal(IntTypeObject.INT_CALL);
+		if (py instanceof RealObject)
+			return Utils.getGlobal(RealTypeObject.REAL_CALL);
+		if (py instanceof ListObject)
+			return PythonRuntime.LIST_TYPE;
+		if (py instanceof ClassInstanceObject)
+			return ((ClassInstanceObject)py).get(ClassObject.__CLASS__, py);
+		if (py instanceof ClassObject)
+			return PythonRuntime.TYPE_TYPE;
+		if (py instanceof SliceObject)
+			return Utils.getGlobal(SliceTypeObject.SLICE_CALL);
+		if (py instanceof TupleObject)
+			return PythonRuntime.TUPLE_TYPE;
+		if (py instanceof DictObject)
+			return PythonRuntime.DICT_TYPE;
+		if (py instanceof StringObject)
+			return PythonRuntime.STRING_TYPE;
+		if (py instanceof PointerObject)
+			return Utils.getGlobal(JavaInstanceTypeObject.JAVA_CALL);
+		if (py instanceof UserFunctionObject)
+			return Utils.getGlobal(FunctionTypeObject.FUNCTION_CALL);
+		if (py instanceof UserMethodObject)
+			return Utils.getGlobal(MethodTypeObject.METHOD_CALL);
+		if (py instanceof BoolObject)
+			return PythonRuntime.BOOL_TYPE;
+		if (py instanceof JavaMethodObject || py instanceof JavaFunctionObject || py instanceof JavaCongruentAggregatorObject)
+			return Utils.getGlobal(JavaCallableTypeObject.JAVACALLABLE_CALL);
+		if (py instanceof ComplexObject)
+			return Utils.getGlobal(ComplexTypeObject.COMPLEX_CALL);
+		if (py instanceof BoundHandleObject)
+			return Utils.getGlobal(BoundFunctionTypeObject.BOUND_FUNCTION_CALL);
+		
+		return NoneObject.NONE;
 	}
 
 	private static boolean checkClassAssignable(ClassObject cls, ClassObject clazz) {
@@ -719,9 +767,10 @@ public class PythonRuntime {
 		addException(globals, "TypeError", "StandardError", false);
 		addException(globals, "ValueError", "StandardError", false);
 		addException(globals, "GeneratorExit", "Exception", false);
-		STOP_ITERATION = globals.getItem("StopIteration");
-		GENERATOR_EXIT = globals.getItem("GeneratorExit");
-		INDEX_ERROR    = globals.getItem("IndexError");
+		ERROR			= globals.getItem("Error");
+		STOP_ITERATION	= globals.getItem("StopIteration");
+		GENERATOR_EXIT	= globals.getItem("GeneratorExit");
+		INDEX_ERROR		= globals.getItem("IndexError");
 	}
 
 
