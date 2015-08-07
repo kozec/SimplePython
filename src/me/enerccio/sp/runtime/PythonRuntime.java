@@ -358,8 +358,8 @@ public class PythonRuntime {
 	public static final String APPLY = "apply";
 	
 	/** Some basic types */
-	public static final TypeObject OBJECT_TYPE = new ObjectTypeObject();
 	public static final TypeObject TYPE_TYPE = new TypeTypeObject();
+	public static final TypeObject OBJECT_TYPE = new ObjectTypeObject();
 	public static final TypeObject NONE_TYPE = new NoneTypeObject();
 	public static final TypeObject STRING_TYPE = new StringTypeObject();
 	public static final TypeObject INT_TYPE = new IntTypeObject();
@@ -369,8 +369,8 @@ public class PythonRuntime {
 	public static final TypeObject BOOL_TYPE = new BoolTypeObject();
 	
 	static {
-		OBJECT_TYPE.newObject();
 		TYPE_TYPE.newObject();
+		OBJECT_TYPE.newObject();
 		NONE_TYPE.newObject();
 		STRING_TYPE.newObject();
 		INT_TYPE.newObject();
