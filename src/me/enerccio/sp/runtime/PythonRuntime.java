@@ -83,6 +83,7 @@ import me.enerccio.sp.types.types.JavaCallableTypeObject;
 import me.enerccio.sp.types.types.JavaInstanceTypeObject;
 import me.enerccio.sp.types.types.ListTypeObject;
 import me.enerccio.sp.types.types.MethodTypeObject;
+import me.enerccio.sp.types.types.NoneTypeObject;
 import me.enerccio.sp.types.types.ObjectTypeObject;
 import me.enerccio.sp.types.types.RealTypeObject;
 import me.enerccio.sp.types.types.SliceTypeObject;
@@ -357,6 +358,7 @@ public class PythonRuntime {
 	
 	/** Some basic types */
 	public static final TypeObject TYPE_TYPE = new TypeTypeObject();
+	public static final TypeObject NONE_TYPE = new NoneTypeObject();
 	public static final TypeObject STRING_TYPE = new StringTypeObject();
 	public static final TypeObject INT_TYPE = new IntTypeObject();
 	public static final TypeObject TUPLE_TYPE = new TupleTypeObject();
@@ -366,6 +368,7 @@ public class PythonRuntime {
 	
 	static {
 		TYPE_TYPE.newObject();
+		NONE_TYPE.newObject();
 		STRING_TYPE.newObject();
 		INT_TYPE.newObject();
 		TUPLE_TYPE.newObject();
@@ -412,6 +415,7 @@ public class PythonRuntime {
 					globals.put(ORD, Utils.staticMethodCall(PythonRuntime.class, ORD, StringObject.class));
 					globals.put(DIR, Utils.staticMethodCall(PythonRuntime.class, DIR, PythonObject.class));
 					globals.put(TypeTypeObject.TYPE_CALL, TYPE_TYPE);
+					globals.put(NoneTypeObject.NONE_TYPE_CALL, NONE_TYPE);
 					globals.put(StringTypeObject.STRING_CALL, STRING_TYPE);
 					globals.put(TupleTypeObject.TUPLE_CALL, TUPLE_TYPE);
 					globals.put(ListTypeObject.LIST_CALL, LIST_TYPE);
@@ -441,7 +445,6 @@ public class PythonRuntime {
 					o.newObject();
 					globals.put(XRangeTypeObject.XRANGE_CALL, o = new XRangeTypeObject());
 					o.newObject();
-
 					
 					addExceptions(globals);
 					
@@ -633,6 +636,8 @@ public class PythonRuntime {
 			return ((ClassInstanceObject)py).get(ClassObject.__CLASS__, py);
 		if (py instanceof ClassObject)
 			return PythonRuntime.TYPE_TYPE;
+		if (py == NoneObject.NONE)
+			return PythonRuntime.NONE_TYPE;
 		if (py instanceof SliceObject)
 			return Utils.getGlobal(SliceTypeObject.SLICE_CALL);
 		if (py instanceof TupleObject)
