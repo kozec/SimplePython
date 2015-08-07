@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.compiler.PythonCompiler;
@@ -238,8 +239,7 @@ public class PythonRuntime {
 	 * @return
 	 */
 	private Pair<ModuleObject, Boolean> loadModule(ModuleProvider provider){
-		DictObject globals = generateGlobals();
-		ModuleObject mo = new ModuleObject(globals, provider);
+		ModuleObject mo = new ModuleObject(provider);
 		return Pair.makePair(mo, provider.isPackage());
 	}
 	
@@ -386,11 +386,13 @@ public class PythonRuntime {
 	 * Generates globals. This is only done once but then cloned
 	 * @return
 	 */
-	public DictObject generateGlobals() {
+	public DictObject getGlobals() {
 		if (globals == null)
 			synchronized (this){
 				if (globals == null){
+					buildingGlobals.set(true);
 					globals = new DictObject();
+					buildingGlobals.set(false);
 					
 					EnvironmentObject e = new EnvironmentObject();
 					e.newObject();
@@ -458,7 +460,7 @@ public class PythonRuntime {
 					}
 					
 					PythonCompiler c = new PythonCompiler();
-					CompiledBlockObject builtin = c.doCompile(p.file_input(), globals, "builtin", null);
+					CompiledBlockObject builtin = c.doCompile(p.file_input(), "builtin", null, null);
 					
 					PythonInterpreter.interpreter.get().executeBytecode(builtin);
 					while (true){
@@ -471,6 +473,8 @@ public class PythonRuntime {
 							continue;
 						throw new PythonException("Failed to initialize python!");
 					}
+					
+					buildingGlobals.set(false);
 				}
 			}
 		
@@ -1017,6 +1021,11 @@ public class PythonRuntime {
 	public PythonObject runtimeWrapper() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	private AtomicBoolean buildingGlobals = new AtomicBoolean(false);
+	public boolean buildingGlobals() {
+		return buildingGlobals.get();
 	}
 }
 

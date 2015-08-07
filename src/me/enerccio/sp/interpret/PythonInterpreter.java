@@ -109,6 +109,7 @@ public class PythonInterpreter extends PythonObject {
 	private DictObject args = null;
 	/** Represents value returned by a call */
 	private PythonObject returnee;
+	private List<DictObject> currentClosure;
 	
 	/**
 	 * whether this interpret can be stopped at safe place or not
@@ -126,7 +127,7 @@ public class PythonInterpreter extends PythonObject {
 	 */
 	public PythonObject executeCall(boolean internal, String function, PythonObject... data) {
 		if (currentFrame.size() == 0)
-			return returnee = execute(internal, PythonRuntime.runtime.generateGlobals().doGet(function), null, data);
+			return returnee = execute(internal, PythonRuntime.runtime.getGlobals().doGet(function), null, data);
 		return returnee = execute(internal, environment().getBuiltin(function), null, data);
 	}
 
@@ -346,11 +347,10 @@ public class PythonInterpreter extends PythonObject {
 		case NOP:
 			// do nothing
 			break;
-		case PUSH_DICT:{
-			// pushes b.mapValue into current environment
-				EnvironmentObject env = currentFrame.getLast().environment;
-				env.add((DictObject)o.compiled.getConstant(o.nextInt()));
-			} break;
+		case RESOLVE_CLOSURE:
+			UserFunctionObject fnc = (UserFunctionObject)stack.peek();
+			fnc.setClosure(environment().toClosure());
+			break;
 		case OPEN_LOCALS:{
 			// adds new dict to env as empty locals
 				EnvironmentObject env = currentFrame.getLast().environment;
@@ -365,6 +365,12 @@ public class PythonInterpreter extends PythonObject {
 			// pushes new environment onto environment stack. 
 			// also sets flag on the current frame to later pop the environment when frame itself is popped
 			o.environment = new EnvironmentObject();
+			if (currentClosure != null){
+				o.environment.add(currentClosure);
+				currentClosure = null;
+			} else if (!PythonRuntime.runtime.buildingGlobals()){
+				o.environment.add(PythonRuntime.runtime.getGlobals());
+			}
 			break;
 		case CALL: {
 			// calls the runnable with arguments
@@ -983,5 +989,9 @@ public class PythonInterpreter extends PythonObject {
 
 	public int getAccessCount() {
 		return accessCount;
+	}
+
+	public void setClosure(List<DictObject> closure) {
+		this.currentClosure = closure;
 	}
 }

@@ -367,7 +367,7 @@ public class Utils {
 	 */
 	public static PythonObject getGlobal(String variable) {
 		if (PythonInterpreter.interpreter.get().currentFrame.size() == 0)
-			return PythonRuntime.runtime.generateGlobals().doGet(variable);
+			return PythonRuntime.runtime.getGlobals().doGet(variable);
 		return PythonInterpreter.interpreter.get().environment().get(new StringObject(variable), true, false);
 	}
 
@@ -504,8 +504,7 @@ public class Utils {
 				for (String s : ss)
 					w.writeInt(insertValue(new StringObject(s), mmap, rmap));
 				break;
-			case PUSH_DICT:
-				w.writeInt(insertValue(b.mapValue, mmap, rmap));
+			case RESOLVE_CLOSURE:
 				break;
 			case PUSH_ENVIRONMENT:
 				break;

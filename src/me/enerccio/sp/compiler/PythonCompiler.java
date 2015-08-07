@@ -119,7 +119,6 @@ import me.enerccio.sp.types.base.RealObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.mappings.DictObject;
 import me.enerccio.sp.types.sequences.StringObject;
-import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.types.types.DictTypeObject;
 import me.enerccio.sp.types.types.ListTypeObject;
 import me.enerccio.sp.types.types.ObjectTypeObject;
@@ -139,7 +138,6 @@ public class PythonCompiler {
 
 	private PythonBytecode cb;
 	private VariableStack stack = new VariableStack();
-	private LinkedList<DictObject> environments = new LinkedList<DictObject>();
 	private Stack<String> compilingClass = new Stack<String>();
 	private Stack<String> compilingFunction = new Stack<String>();
 	private Stack<String> docstring = new Stack<String>();
@@ -161,10 +159,6 @@ public class PythonCompiler {
 		moduleName = "generated-functions";
 		stack.push();
 		compilingFunction.push("generated-function");
-		
-		for (DictObject global : globals)
-			environments.add(global);
-		
 		UserFunctionObject fnc = new UserFunctionObject();
 		fnc.newObject();
 		
@@ -192,14 +186,10 @@ public class PythonCompiler {
 		fnc.block.newObject();
 		
 		globals.add(locals);
-		Collections.reverse(globals);
-		
-		TupleObject to = new TupleObject(globals.toArray(new PythonObject[globals.size()]));
-		to.newObject();
-		Utils.putPublic(fnc, "closure", to);
-		Utils.putPublic(fnc, "locals", locals);
 		Utils.putPublic(fnc, "function_defaults", defaults);
 		Utils.putPublic(fnc, "__doc__", getDocstring());
+		
+		fnc.setClosure(globals);
 		
 		compilingFunction.pop();
 		return fnc;
@@ -212,11 +202,11 @@ public class PythonCompiler {
 	 * @param m module
 	 * @return
 	 */
-	public CompiledBlockObject doCompile(File_inputContext fcx, DictObject dict, ModuleObject m) {
-		return doCompile(fcx, dict, m.fields.get(ModuleObject.__NAME__).object.toString(), m);
+	public CompiledBlockObject doCompile(File_inputContext fcx, ModuleObject m, DictObject builtins) {
+		return doCompile(fcx, m.fields.get(ModuleObject.__NAME__).object.toString(), m, builtins);
 	}
 	
-	public CompiledBlockObject doCompile(File_inputContext fcx, DictObject dict, String mn, ModuleObject m) {
+	public CompiledBlockObject doCompile(File_inputContext fcx, String mn, ModuleObject m, DictObject builtins) {
 		moduleName = mn;
 		compilingFunction.push(null);
 		
@@ -225,26 +215,32 @@ public class PythonCompiler {
 		List<PythonBytecode> bytecode = new ArrayList<PythonBytecode>();
 		// create new environment
 		addBytecode(bytecode, Bytecode.PUSH_ENVIRONMENT, fcx.start);
+		if (builtins != null)
+			addBytecode(bytecode, Bytecode.OPEN_LOCALS, fcx.start);
 		// context
 		cb = addBytecode(bytecode, Bytecode.PUSH, fcx.start);
 		cb.value = NoneObject.NONE;
 		addBytecode(bytecode, Bytecode.PUSH_LOCAL_CONTEXT, fcx.start);
-		// locals
-		cb = addBytecode(bytecode, Bytecode.PUSH_DICT, fcx.start); 
-		cb.mapValue = dict;
-		environments.add(dict);
-		
+		if (builtins != null){
+			cb = addBytecode(bytecode, Bytecode.PUSH, fcx.start);
+			cb.value = builtins;
+			cb = addBytecode(bytecode, Bytecode.SAVE_LOCAL, fcx.start);
+			cb.stringValue = "__builtin__";
+		}
 		
 		compile(fcx, bytecode, m);
+
 		
 		compilingClass.pop();
 		stack.pop();
-		environments.removeLast();
 		
 		CompiledBlockObject cob = new CompiledBlockObject(bytecode);
 		cob.newObject();
 		
-		dict.backingMap.put(new StringObject("__doc__"), getDocstring());
+		cb = addBytecode(bytecode, Bytecode.PUSH, fcx.start);
+		cb.value = getDocstring();
+		cb = addBytecode(bytecode, Bytecode.SAVE_LOCAL, fcx.start);
+		cb.stringValue = "__doc__";
 		
 		compilingFunction.pop();
 		return cob;
@@ -593,6 +589,10 @@ public class PythonCompiler {
 		if (classdef.testlist() != null)
 			for (TestContext tc : classdef.testlist().test())
 				compile(tc, bytecode);
+		else {
+			cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, classdef.start);
+			cb.stringValue = "object";
+		}
 		cb = addBytecode(bytecode, Bytecode.CALL, classdef.start);
 		cb.intValue = c;
 		UserFunctionObject fnc = new UserFunctionObject();
@@ -616,6 +616,7 @@ public class PythonCompiler {
 		
 		cb = addBytecode(bytecode, Bytecode.PUSH, classdef.stop);
 		cb.value = fnc;
+		addBytecode(bytecode, Bytecode.RESOLVE_CLOSURE, classdef.stop);
 		cb = addBytecode(bytecode, Bytecode.CALL, classdef.stop);
 		cb.intValue = 0;
 		cb = addBytecode(bytecode, Bytecode.CALL, classdef.stop);
@@ -694,6 +695,7 @@ public class PythonCompiler {
 		cb = addBytecode(bytecode, Bytecode.PUSH, funcdef.stop);
 		cb.value = fnc;
 		
+		addBytecode(bytecode, Bytecode.RESOLVE_CLOSURE, funcdef.stop);
 		addBytecode(bytecode, Bytecode.DUP, funcdef.stop); // function_defaults
 		
 		cb = addBytecode(bytecode, Bytecode.PUSH, funcdef.stop);
@@ -745,18 +747,11 @@ public class PythonCompiler {
 		}
 	}
 
-	private void doCompileFunction(ParseTree suite,
-			List<PythonBytecode> bytecode, Token t, DictObject dict) {
+	private void doCompileFunction(ParseTree suite, List<PythonBytecode> bytecode, Token t, DictObject dict) {
 
 		stack.push();
 		addBytecode(bytecode, Bytecode.PUSH_ENVIRONMENT, t);
-		if (dict != null)
-			environments.add(dict);
-		for (DictObject d : Utils.reverse(environments)){
-			cb = addBytecode(bytecode, Bytecode.PUSH_DICT, t); 
-			cb.mapValue = d;
-		}
-		cb = addBytecode(bytecode, Bytecode.OPEN_LOCALS, t);
+		addBytecode(bytecode, Bytecode.OPEN_LOCALS, t);
 		addBytecode(bytecode, Bytecode.RESOLVE_ARGS, t);
 		
 		if (suite instanceof SuiteContext){
@@ -776,8 +771,6 @@ public class PythonCompiler {
 			for (StmtContext c : ((String_inputContext) suite).stmt())
 				compileStatement(c, bytecode, null);
 		
-		if (dict != null)
-			environments.removeLast();
 		stack.pop();
 	}
 
