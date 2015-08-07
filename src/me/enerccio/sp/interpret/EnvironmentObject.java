@@ -112,7 +112,23 @@ public class EnvironmentObject extends PythonObject {
 
 	@Override
 	protected String doToString() {
-		return "<environment 0x" + Integer.toHexString(hashCode()) + ">"; 
+		StringBuffer sb = new StringBuffer();
+		sb.append("<environment 0x");
+		sb.append(Integer.toHexString(hashCode()));
+		sb.append("\n");
+		int pad = 2;
+		for (DictObject e : environments){
+			for (int i=0; i<pad; i++)
+				sb.append(" ");
+			for (String k : e.keys()) {
+				sb.append(k);
+				sb.append(" ");
+			}
+			sb.append("\n");
+			pad += 2;
+		}
+		sb.append(">");
+		return sb.toString(); 
 	}
 
 	/**
