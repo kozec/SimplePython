@@ -266,7 +266,7 @@ return_stmt
 ;
 
 raise_stmt
-: 'raise' test?
+: 'raise' (test (',' test)? )?
 ;
 
 import_stmt
