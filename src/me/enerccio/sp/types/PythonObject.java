@@ -136,6 +136,18 @@ public abstract class PythonObject implements Serializable {
 	}
 
 	/**
+	 * Returns the field value, ignoring AccessRestrictions
+	 * @param key
+	 * @return
+	 */
+	public synchronized PythonObject get(String key) {
+		AugumentedPythonObject field = fields.get(key);
+		if (field == null)
+			return null;
+		return field.object;
+	}
+
+	/**
 	 * Sets the value of the field into value with local context
 	 * @param key
 	 * @param localContext

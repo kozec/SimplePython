@@ -47,7 +47,8 @@ public class Coerce {
 		
 		// 2st, return PythonObject if requested
 		if (clazz.isAssignableFrom(o.getClass()))
-			return clazz.cast(o);
+			if (PythonObject.class.isAssignableFrom(clazz))
+				return clazz.cast(o);
 
 		// 3nd, coerce None directly
 		if (o == NoneObject.NONE) {
@@ -274,6 +275,17 @@ public class Coerce {
 					return ((StringObject) o).getString();
 				
 				throw new CastFailedException("Can't convert " + o.toString() + " to string");
+			}
+		});
+		
+		COERCIONS.put(Object.class, new Coercion() {
+			/** Coerces to object. Everything is an object, but PointerObject is dereferenced first */
+			@Override
+			public Object coerce(PythonObject o, Class<?> clazz) throws CastFailedException {
+				if (o instanceof PointerObject)
+					return ((PointerObject) o).getObject();
+				// TODO: Coerce int and stuff?
+				return o;
 			}
 		});
 
