@@ -1,4 +1,14 @@
-print "modul x 1"
-include y
-print "modul x 2"
-print "modul x 3"
+class X:
+	def __getitem__(self, x):
+		if x > 5 : raise IndexError(x)
+		return -x
+
+lst = X()
+
+class Z:
+	def __init__(self):
+		raise TypeError, self
+
+def test():
+	print list(lst)
+	Z()
