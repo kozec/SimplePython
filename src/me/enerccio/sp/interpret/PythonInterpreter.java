@@ -123,10 +123,10 @@ public class PythonInterpreter extends PythonObject {
 	 * @param data
 	 * @return
 	 */
-	public PythonObject executeCall(String function, PythonObject... data) {
+	public PythonObject executeCall(boolean internal, String function, PythonObject... data) {
 		if (currentFrame.size() == 0)
-			return returnee = execute(false, PythonRuntime.runtime.generateGlobals().doGet(function), null, data);
-		return returnee = execute(false, environment().getBuiltin(function), null, data);
+			return returnee = execute(internal, PythonRuntime.runtime.generateGlobals().doGet(function), null, data);
+		return returnee = execute(internal, environment().getBuiltin(function), null, data);
 	}
 
 	/**

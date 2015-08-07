@@ -116,6 +116,7 @@ public class PythonRuntime {
 	private volatile boolean allowedNewInterpret = true;
 	public static PythonObject STOP_ITERATION;
 	public static PythonObject GENERATOR_EXIT;
+	public static PythonObject INDEX_ERROR;
 	
 	/**
 	 * Waits until creation of new interprets is possible
@@ -720,6 +721,7 @@ public class PythonRuntime {
 		addException(globals, "GeneratorExit", "Exception", false);
 		STOP_ITERATION = globals.getItem("StopIteration");
 		GENERATOR_EXIT = globals.getItem("GeneratorExit");
+		INDEX_ERROR    = globals.getItem("IndexError");
 	}
 
 
