@@ -40,12 +40,6 @@ public class NoneObject extends PythonObject {
 	}
 
 	@Override
-	public PythonObject getType(){
-		// TODO: Why? :(
-		return this;
-	}
-
-	@Override
 	public PythonObject set(String key, PythonObject localContext,
 			PythonObject value) {
 		if (!fields.containsKey(key))
