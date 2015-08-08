@@ -46,12 +46,12 @@ public class FunctionTypeObject extends TypeObject {
 		return "function";
 	}
 
-	// function(string, locals, tuple_of_maps, list_of_anames, vararg_name, dict)
+	// function(string, locals, tuple_of_maps, list_of_anames, vararg_name, kwargs_name, dict)
 	@Override
 	public PythonObject call(TupleObject args, KwArgs kwargs){
 		if (kwargs != null)
 			kwargs.notExpectingKWArgs();	// Throws exception if there is kwarg defined 
-		if (args.len() != 6)
+		if (args.len() != 7)
 			throw new TypeError(" function(): incorrect number of parameters, requires 6, got " + args.len());
 		
 		String src = null;
@@ -59,6 +59,7 @@ public class FunctionTypeObject extends TypeObject {
 		List<InternalDict> maps = new ArrayList<InternalDict>();
 		List<String> aas = new ArrayList<String>();
 		String vararg = null;
+		String kwararg = null;
 		InternalDict defaults = null;
 		
 		try {
@@ -79,7 +80,11 @@ public class FunctionTypeObject extends TypeObject {
 			if (arg != NoneObject.NONE)
 				vararg = ((StringObject)arg).value;
 			
-			arg = args.getObjects()[5];
+			arg = args.getObjects()[4];
+			if (arg != NoneObject.NONE)
+				kwararg = ((StringObject)arg).value;
+			
+			arg = args.getObjects()[6];
 			if (arg != NoneObject.NONE)
 				defaults = (InternalDict)arg;
 			else
@@ -91,7 +96,7 @@ public class FunctionTypeObject extends TypeObject {
 		
 		PythonCompiler c = new PythonCompiler();
 		
-		return c.doCompile(ParserGenerator.parseStringInput(src).string_input(), maps, aas, vararg, defaults, dict);
+		return c.doCompile(ParserGenerator.parseStringInput(src).string_input(), maps, aas, vararg, kwararg, defaults, dict);
 	}
 
 }
