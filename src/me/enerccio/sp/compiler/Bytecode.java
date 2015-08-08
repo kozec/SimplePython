@@ -52,7 +52,7 @@ public enum Bytecode {
 	// frames 
 	YIELD(96),
 	// delete
-	DEL(104), DELATTR(105), DELKEY(106),
+	DEL(104), DELATTR(105),
 	
 	// loops, iterators, boolean stuff
 	SETUP_LOOP(128), GET_ITER(129), ACCEPT_ITER(130),
@@ -98,10 +98,6 @@ public enum Bytecode {
 			break;
 		case DELATTR:
 			bytecode = new DelAttr();
-			bytecode.newObject();
-			break;
-		case DELKEY:
-			bytecode = new DelKey();
 			bytecode.newObject();
 			break;
 		case RESOLVE_CLOSURE:

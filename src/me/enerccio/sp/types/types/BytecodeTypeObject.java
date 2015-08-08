@@ -130,9 +130,6 @@ public class BytecodeTypeObject extends TypeObject {
 			case LOADBUILTIN:
 				bytecode.stringValue = Coerce.toJava(args.get(1), String.class);
 				break;
-			case LOADDYNAMIC:
-				bytecode.stringValue = Coerce.toJava(args.get(1), String.class);
-				break;
 			case LOADGLOBAL:
 				bytecode.stringValue = Coerce.toJava(args.get(1), String.class);
 				break;
@@ -171,9 +168,6 @@ public class BytecodeTypeObject extends TypeObject {
 				bytecode.intValue = Coerce.toJava(args.get(1), int.class);
 				break;
 			case SAVE:
-				bytecode.stringValue = Coerce.toJava(args.get(1), String.class);
-				break;
-			case SAVEDYNAMIC:
 				bytecode.stringValue = Coerce.toJava(args.get(1), String.class);
 				break;
 			case SAVEGLOBAL:

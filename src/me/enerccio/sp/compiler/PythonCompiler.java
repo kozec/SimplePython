@@ -1038,22 +1038,39 @@ public class PythonCompiler {
 		if (ctx.factor() != null)
 			throw Utils.throwException("SyntaxError", "can't use arithmetics in del statemenet");
 		if (ctx.trailer().size() > 0){
-			
+			compile(ctx.atom(), bytecode);
+			// atom on stack
+			for (int i=0; i<ctx.trailer().size(); i++){
+				if (i == ctx.trailer().size() -1 ){
+					// some value is on stack, depending on last trailer, either delkeys or delattr, or error
+					TrailerContext tc = ctx.trailer(i);
+					String text = tc.getText().trim();
+					if (text.startsWith("("))
+						throw Utils.throwException("SyntaxError", "can't use del in function call");
+					if (tc.NAME() != null){
+						String fname = tc.NAME().getText();
+						cb = addBytecode(bytecode, Bytecode.DELATTR, tc.start);
+						cb.stringValue = fname;
+						return;
+					} else {
+						putGetAttr("__delkey__", bytecode, tc.start);
+						compileSubscript(tc.subscriptlist(), bytecode);
+					}
+				} else {
+					compile(ctx.trailer(i), bytecode);
+				}
+			}
 		} else {
 			compileDel(ctx.atom(), bytecode, false);
 		}
 	}
 
-	private void compileDel(AtomContext atom, List<PythonBytecode> bytecode,
-			boolean delkeyOnly) {
+	private void compileDel(AtomContext atom, List<PythonBytecode> bytecode, boolean delkeyOnly) {
 		if (!delkeyOnly){
 			if (atom.nname() != null){
-				String vname = atom.nname().getText();
-				if (stack.typeOfVariable(vname) == VariableType.DYNAMIC)
-					throw Utils.throwException("SyntaxError", "can't use del statemenet on dynamic variables");
 				cb = addBytecode(bytecode, Bytecode.DEL, atom.nname().start);
 				cb.stringValue = atom.nname().getText();
-				cb.booleanValue = stack.typeOfVariable(vname) == VariableType.GLOBAL;
+				cb.booleanValue = false;
 				return;
 			}
 			throw Utils.throwException("SyntaxError", "can't use atoms in del statemenet");
@@ -1535,15 +1552,15 @@ public class PythonCompiler {
 					cb.intValue = -1 * (cb.intValue + 1);
 			}
 		} else if (tc.getText().startsWith("[")) {
-			compileSubscript(tc.subscriptlist(), bytecode, tc.start);
+			putGetAttr("__getitem__", bytecode, tc.start);
+			compileSubscript(tc.subscriptlist(), bytecode);
 		} else {			
 			putGetAttr(tc.NAME().getText(), bytecode, tc.start);
 		}
 	}
 
 	private void compileSubscript(SubscriptlistContext sc,
-			List<PythonBytecode> bytecode, Token pt) {
-		putGetAttr("__getitem__", bytecode, pt);
+			List<PythonBytecode> bytecode) {
 		int tlc = sc.subscript().size();
 		if (tlc > 1){
 			cb = addBytecode(bytecode, Bytecode.LOADGLOBAL, sc.start);

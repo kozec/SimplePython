@@ -83,7 +83,7 @@ public class SimplePython {
 	}
 	
 	public static void setField(PythonObject object, String fieldName, PythonObject value){
-		PythonRuntime.setattr(object, fieldName, value);
+		object.set(fieldName, null, value);
 	}
 	
 	public static PythonObject getField(PythonObject o, String fieldName){

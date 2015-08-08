@@ -168,6 +168,18 @@ public abstract class PythonObject implements Serializable {
 			fields.remove(key);
 		return NoneObject.NONE;
 	}
+	
+	/**
+	 * Removes the value of the field into value with local context
+	 */
+	public PythonObject delete(String key, PythonObject localContext) {
+		if (!fields.containsKey(key))
+			throw Utils.throwException("AttributeError", "'" + 
+					Utils.run("str", Utils.run("type", this)) + "' object has no attribute '" + key + "'");
+		fields.get(key);	// Throws exception if key is private
+		fields.remove(key);
+		return null;
+	}
 
 	/**
 	 * Checks if field is private

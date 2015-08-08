@@ -734,19 +734,7 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject delattr(PythonObject o, String attribute) {
-		return setattr(o, attribute, null);
-	}
-	
-	public static PythonObject setattr(PythonObject o, String attribute, PythonObject v){
-		if (o.get("__setattr__", PythonInterpreter.interpreter.get().getLocalContext()) != null){
-			return PythonInterpreter.interpreter.get().execute(false, o.get("__setattr__", PythonInterpreter.interpreter.get().getLocalContext()),
-					null, new StringObject(attribute), v);
-		}
-		o.set(attribute, PythonInterpreter.interpreter.get().getLocalContext(), v);
-		if (attribute.startsWith("__") && !attribute.endsWith("__"))
-			if (o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext()) != null)
-				o.setPrivate(attribute, PythonInterpreter.interpreter.get().getLocalContext());
-		return NoneObject.NONE;
+		return o.delete(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 	}
 	
 	private void addExceptions(DictObject globals) {
