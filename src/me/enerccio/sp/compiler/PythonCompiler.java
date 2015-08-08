@@ -466,7 +466,7 @@ public class PythonCompiler {
 		try {
 			parser = Utils.parse(toInclude);
 		} catch (Exception e) {
-			throw Utils.throwException("SyntaxError", "failed to parse source code of " + toInclude, e);
+			throw Utils.throwException("SyntaxError", "failed to parse source code of " + filename, e);
 		}
 		ModuleInfo prevModule = module;
 		module = new ModuleInfo() {
