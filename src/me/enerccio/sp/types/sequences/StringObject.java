@@ -17,7 +17,12 @@
  */
 package me.enerccio.sp.types.sequences;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import me.enerccio.sp.types.Arithmetics;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.iterators.OrderedSequenceIterator;
 import me.enerccio.sp.utils.Utils;
 
@@ -28,6 +33,25 @@ import me.enerccio.sp.utils.Utils;
  */
 public class StringObject extends ImmutableSequenceObject implements SimpleIDAccessor {
 	private static final long serialVersionUID = 11L;
+
+	private static Map<String, JavaMethodObject> sfields = new HashMap<String, JavaMethodObject>();
+	
+	static {
+		try {
+			// __ADD__ is defined in SequenceObject
+			sfields.put(Arithmetics.__MUL__, new JavaMethodObject(StringObject.class, "mul", PythonObject.class));
+			sfields.put(Arithmetics.__MOD__, new JavaMethodObject(StringObject.class, "mod", PythonObject.class));
+			sfields.put(Arithmetics.__LT__, new JavaMethodObject(StringObject.class, "lt", PythonObject.class));
+			sfields.put(Arithmetics.__LE__, new JavaMethodObject(StringObject.class, "le", PythonObject.class));
+			sfields.put(Arithmetics.__EQ__, new JavaMethodObject(StringObject.class, "eq", PythonObject.class));
+			sfields.put(Arithmetics.__NE__, new JavaMethodObject(StringObject.class, "ne", PythonObject.class));
+			sfields.put(Arithmetics.__GE__, new JavaMethodObject(StringObject.class, "ge", PythonObject.class));
+			sfields.put(Arithmetics.__GT__, new JavaMethodObject(StringObject.class, "gt", PythonObject.class));
+
+		} catch (Exception e) {
+			throw new RuntimeException("Fuck", e);
+		}
+	}
 	
 	public StringObject(){
 		newObject();
@@ -36,6 +60,12 @@ public class StringObject extends ImmutableSequenceObject implements SimpleIDAcc
 	public StringObject(String v){
 		newObject();
 		value = v;
+	}
+	
+	@Override
+	public void newObject() {
+		super.newObject();
+		bindMethods(sfields);
 	}
 	
 	public String value;
@@ -98,5 +128,37 @@ public class StringObject extends ImmutableSequenceObject implements SimpleIDAcc
 		if (o instanceof StringObject)
 			return value.contains(((StringObject)o).value);
 		return false;
+	}
+	
+	public PythonObject mul(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__MUL__);
+	}
+	
+	public PythonObject mod(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__MOD__);
+	}
+
+	public PythonObject lt(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__LT__);
+	}
+	
+	public PythonObject le(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__LE__);
+	}
+	
+	public PythonObject eq(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__EQ__);
+	}
+	
+	public PythonObject ne(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__NE__);
+	}
+	
+	public PythonObject gt(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__GT__);
+	}
+	
+	public PythonObject ge(PythonObject arg){
+		return Arithmetics.doOperatorString(this, arg, Arithmetics.__GE__);
 	}	
 }
