@@ -754,7 +754,9 @@ public class PythonCompiler {
 			if (d.arglist() != null){
 				CallArgsData args = compileArguments(d.arglist(), bytecode);
 				cb = addBytecode(bytecode, Bytecode.CALL, d.stop);
-				cb.intValue = args.normalArgCount * (args.hasArgExpansion ? -1 : 1);
+				cb.intValue = args.normalArgCount;
+				if (args.hasArgExpansion)
+					cb.intValue = -1 * (cb.intValue + 1);
 			}
 			// call
 			addBytecode(bytecode, Bytecode.SWAP_STACK, dc.stop);
@@ -981,13 +983,11 @@ public class PythonCompiler {
 			compile(ctx.yield_stmt(), bytecode);
 	}
 
-	private void compile(Yield_stmtContext ctx,
-			List<PythonBytecode> bytecode) {
+	private void compile(Yield_stmtContext ctx, List<PythonBytecode> bytecode) {
 		compile(ctx.yield_expr(), bytecode);
 	}
 
-	private void compile(Yield_exprContext ctx,
-			List<PythonBytecode> bytecode) {
+	private void compile(Yield_exprContext ctx, List<PythonBytecode> bytecode) {
 		String name = compilingFunction.peek();
 		if (name == null)
 			throw Utils.throwException("SyntaxError", "yield outside function body");
@@ -1439,7 +1439,9 @@ public class PythonCompiler {
 			} else {
 				CallArgsData args = compileArguments(tc.arglist(), bytecode);
 				cb = addBytecode(bytecode, Bytecode.CALL, tc.stop);
-				cb.intValue = args.normalArgCount * (args.hasArgExpansion ? -1 : 1);
+				cb.intValue = args.normalArgCount;
+				if (args.hasArgExpansion)
+					cb.intValue = -1 * (cb.intValue + 1);
 			}
 		} else if (tc.getText().startsWith("[")) {
 			compileSubscript(tc.subscriptlist(), bytecode, tc.start);
@@ -1532,14 +1534,20 @@ public class PythonCompiler {
 				compile(ac.test(), bytecode);
 			}
 		}
+		if (arglist.arg_kwexpand() != null) {
+			// call(**b)
+			compile(arglist.arg_kwexpand().test(), bytecode);
+			cb = addBytecode(bytecode, Bytecode.UNPACK_KWARG, arglist.start);
+			rv.hasKwExpansion = true;
+		}
 		if (kws.size() > 0) {
 			cb = addBytecode(bytecode, Bytecode.KWARG, arglist.start);
 			cb.object = kws.toArray(new String[] {} );
 		}
 		if (arglist.test() != null){
-			// TODO: Support this, maybe
-			throw Utils.throwException("SyntaxError", "argument expansion not supported");
-			// compile(arglist.test(), bytecode);
+			// call(*a)
+			compile(arglist.test(), bytecode);
+			rv.hasArgExpansion = true;
 		}
 		return rv;
 	}
@@ -1549,6 +1557,8 @@ public class PythonCompiler {
 		public int kwArgCount = 0;
 		public int normalArgCount = 0;
 		public boolean hasArgExpansion = false; 
+		@SuppressWarnings("unused")
+		public boolean hasKwExpansion = false;
 	}
 
 	private void compile(AtomContext ctx, List<PythonBytecode> bytecode) {
