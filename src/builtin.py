@@ -165,6 +165,9 @@ class set(object):
         
     def __contains__(self, key):
         return key in self.__inner_map
+    
+    def __delkey__(self, key):
+        del self.__inner_map[key]
    
 def range(arg1, arg2=None, arg3=1):
     return list(xrange(arg1, arg2, arg3))

@@ -226,4 +226,21 @@ public class DictObject extends ContainerObject {
 			return backingMap.containsKey(o);
 		}
 	}
+
+	public HashMap<String, PythonObject> asStringDict() {
+		HashMap<String, PythonObject> strDict = new HashMap<String, PythonObject>();
+		synchronized (backingMap){
+			for (PythonProxy pp : backingMap.keySet()){
+				strDict.put(((StringObject)Utils.run("str", pp.o)).value, backingMap.get(pp));
+			}
+		}
+		return strDict;
+	}
+
+	@Override
+	public synchronized void deleteKey(PythonObject key) {
+		if (!backingMap.containsKey(key))
+			throw Utils.throwException("NameError", "__delkey__(): unknown key '" + key.toString() + "'");
+		backingMap.remove(key);
+	}
 }

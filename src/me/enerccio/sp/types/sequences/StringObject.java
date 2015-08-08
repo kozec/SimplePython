@@ -161,4 +161,9 @@ public class StringObject extends ImmutableSequenceObject implements SimpleIDAcc
 	public PythonObject ge(PythonObject arg){
 		return Arithmetics.doOperatorString(this, arg, Arithmetics.__GE__);
 	}	
+	
+	@Override
+	public void deleteKey(PythonObject key) {
+		throw Utils.throwException("TypeError", "'" + Utils.run("typename", this) + "' object doesn't support item deletion");
+	}
 }
