@@ -482,7 +482,7 @@ public class PythonRuntime {
 				}
 			}
 		
-		return globals.cloneMap();
+		return globals;
 	}
 	
 	protected static List<String> dir(PythonObject o){

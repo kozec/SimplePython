@@ -425,7 +425,7 @@ public class PythonInterpreter extends PythonObject {
 				stack.push(((InternallyIterable)value).__iter__());
 				o.pc = jv;
 			} else {
-				runnable = environment().get(new StringObject("iter"), true, false);				
+				runnable = environment().getBuiltin("iter");				
 				returnee = execute(true, runnable, null, value);
 				o.accepts_return = true;
 			}
