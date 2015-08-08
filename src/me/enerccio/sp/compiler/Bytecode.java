@@ -22,6 +22,7 @@ import java.util.List;
 import org.antlr.v4.runtime.Token;
 
 import me.enerccio.sp.compiler.PythonBytecode.*;
+import me.enerccio.sp.runtime.ModuleInfo;
 
 /**
  * Bytecode enum, containing types of bytecodes and their numerical value. 
@@ -59,6 +60,8 @@ public enum Bytecode {
 		this.id = id;
 	}
 	
+	public static final String NO_FUNCTION = "<module>";
+
 	public final int id;
 
 	/**
@@ -72,15 +75,6 @@ public enum Bytecode {
 				return b;
 		return null;
 	}
-	
-	/**
-	 * Creates new PythonBytecode object based on the bytecode
-	 * @param b
-	 * @return
-	 */
-	public static PythonBytecode makeBytecode(Bytecode b) {
-		return makeBytecode(b, null, null);
-	}
 
 	/**
 	 * Creates new PythonBytecode object based on the bytecode, sets the source information based on the token.
@@ -88,7 +82,7 @@ public enum Bytecode {
 	 * @param t may be null
 	 * @return
 	 */
-	public static PythonBytecode makeBytecode(Bytecode b, Token t, String moduleName) {
+	public static PythonBytecode makeBytecode(Bytecode b, Token t, String functionName, ModuleInfo module) {
 		PythonBytecode bytecode = null;
 		
 		switch (b) {
@@ -258,10 +252,14 @@ public enum Bytecode {
 			break;
 		}
 		
-		bytecode.debugModule = moduleName;
+		if (module == null)
+			throw new RuntimeException("Module cannot be null. Create static ModuleProvider if necessary.");
+		bytecode.debugModule = module;
+		bytecode.debugFunction = functionName == null ? NO_FUNCTION : functionName;
 		if (t != null){
 			bytecode.debugLine = t.getLine();
-			bytecode.debugInLine = t.getCharPositionInLine();
+			bytecode.debugCharacter = t.getCharPositionInLine();
+			bytecode.debugFunction = functionName;
 		}
 		
 		return bytecode;

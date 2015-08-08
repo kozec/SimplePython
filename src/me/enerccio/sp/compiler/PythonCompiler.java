@@ -106,10 +106,10 @@ import me.enerccio.sp.parser.pythonParser.Xor_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_or_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_stmtContext;
+import me.enerccio.sp.runtime.ModuleInfo;
 import me.enerccio.sp.runtime.ModuleProvider;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.Arithmetics;
-import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.ComplexObject;
 import me.enerccio.sp.types.base.EllipsisObject;
@@ -135,6 +135,11 @@ import org.antlr.v4.runtime.ParserRuleContext;
  */
 public class PythonCompiler {
 	private static volatile long genFunc = 0;
+	private static ModuleInfo GENERATED_FUNCTIONS = new ModuleInfo() {
+		@Override public ModuleProvider getIncludeProvider() { return null ; }
+		@Override public String getName() { return "<generated-functions>"; };
+		@Override public String getFileName() { return getName(); }
+	};
 
 	private PythonBytecode cb;
 	private VariableStack stack = new VariableStack();
@@ -142,7 +147,7 @@ public class PythonCompiler {
 	private Stack<String> compilingFunction = new Stack<String>();
 	private Stack<String> docstring = new Stack<String>();
 	
-	private String moduleName = null;
+	private ModuleInfo module = null;
 	
 	/**
 	 * Compiles source into single UserFunctionObject. Used by function() function
@@ -156,7 +161,7 @@ public class PythonCompiler {
 	 */
 	public UserFunctionObject doCompile(String_inputContext sctx, List<DictObject> globals, 
 			List<String> args, String vargarg, DictObject defaults, DictObject locals) {
-		moduleName = "generated-functions";
+		module = GENERATED_FUNCTIONS;
 		stack.push();
 		compilingFunction.push("generated-function");
 		UserFunctionObject fnc = new UserFunctionObject();
@@ -202,12 +207,8 @@ public class PythonCompiler {
 	 * @param m module
 	 * @return
 	 */
-	public CompiledBlockObject doCompile(File_inputContext fcx, ModuleObject m, DictObject builtins) {
-		return doCompile(fcx, m.fields.get(ModuleObject.__NAME__).object.toString(), m, builtins);
-	}
-	
-	public CompiledBlockObject doCompile(File_inputContext fcx, String mn, ModuleObject m, DictObject builtins) {
-		moduleName = mn;
+	public CompiledBlockObject doCompile(File_inputContext fcx, ModuleInfo m, DictObject builtins) {
+		this.module = m;
 		compilingFunction.push(null);
 		
 		stack.push();
@@ -246,7 +247,7 @@ public class PythonCompiler {
 		return cob;
 	}
 
-	private void compile(File_inputContext fcx, List<PythonBytecode> bytecode, ModuleObject m) {
+	private void compile(File_inputContext fcx, List<PythonBytecode> bytecode, ModuleInfo m) {
 		boolean first = true;
 		for (Label_or_stmtContext ls : fcx.label_or_stmt()){
 			if (first){
@@ -308,8 +309,8 @@ public class PythonCompiler {
 	private void compileTry(Try_stmtContext try_stmt, List<PythonBytecode> bytecode, ControllStack cs) {
 		TryFinallyItem tfi = new TryFinallyItem(try_stmt);
 		cs = ControllStack.push(cs, tfi);
-		PythonBytecode makeFrame = Bytecode.makeBytecode(Bytecode.PUSH_FRAME, try_stmt.start, moduleName);
-		PythonBytecode excTestJump = Bytecode.makeBytecode(Bytecode.GOTO, try_stmt.start, moduleName);
+		PythonBytecode makeFrame = Bytecode.makeBytecode(Bytecode.PUSH_FRAME, try_stmt.start, getFunction(), module);
+		PythonBytecode excTestJump = Bytecode.makeBytecode(Bytecode.GOTO, try_stmt.start, getFunction(), module);
 		PythonBytecode elseJump = null;
 		List<PythonBytecode> exceptJumps = new ArrayList<>();
 		List<PythonBytecode> finallyJumps = new ArrayList<>();
@@ -330,7 +331,7 @@ public class PythonCompiler {
 			cb = addBytecode(bytecode, Bytecode.LOADGLOBAL, try_stmt.start);
 			cb.stringValue = "LoopBreak"; 
 			addBytecode(bytecode, Bytecode.ISINSTANCE, try_stmt.start);
-			PythonBytecode skipOver = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, try_stmt.start, moduleName);
+			PythonBytecode skipOver = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, try_stmt.start, getFunction(), module);
 			bytecode.add(skipOver);
 			
 			tfi.outputFinallyBreakBlock(try_stmt, bytecode, cs);
@@ -341,7 +342,7 @@ public class PythonCompiler {
 			cb = addBytecode(bytecode, Bytecode.LOADGLOBAL, try_stmt.start);
 			cb.stringValue = "LoopContinue"; 
 			addBytecode(bytecode, Bytecode.ISINSTANCE, try_stmt.start);
-			PythonBytecode skipOver = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, try_stmt.start, moduleName);
+			PythonBytecode skipOver = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, try_stmt.start, getFunction(), module);
 			bytecode.add(skipOver);
 			
 			tfi.outputFinallyContinueBlock(try_stmt, bytecode, cs);
@@ -446,7 +447,7 @@ public class PythonCompiler {
 		addBytecode(bytecode, Bytecode.POP, try_stmt.start);
 	}
 
-	private void compile(Label_or_stmtContext ls, List<PythonBytecode> bytecode, ControllStack cs, ModuleObject m) {
+	private void compile(Label_or_stmtContext ls, List<PythonBytecode> bytecode, ControllStack cs, ModuleInfo m) {
 		if (ls.include() != null)
 			compileInclude(ls.include(), bytecode, m);
 		if (ls.label() != null)
@@ -456,19 +457,33 @@ public class PythonCompiler {
 	}
 
 
-	private void compileInclude(IncludeContext include, List<PythonBytecode> bytecode, ModuleObject m) {
-		String filename = include.nname().getText();
-		ModuleProvider toInclude = PythonRuntime.runtime.getModuleSource(filename, m.provider.getPackageResolve());
+	private void compileInclude(IncludeContext include, List<PythonBytecode> bytecode, final ModuleInfo m) {
+		final String filename = include.nname().getText();
+		if (m.getIncludeProvider() == null)
+			throw Utils.throwException("Error", "can't use include in this module");
+		final ModuleProvider toInclude = PythonRuntime.runtime.getModuleSource(filename, m.getIncludeProvider().getPackageResolve());
 		pythonParser parser;
 		try {
 			parser = Utils.parse(toInclude);
 		} catch (Exception e) {
 			throw Utils.throwException("SyntaxError", "failed to parse source code of " + toInclude, e);
 		}
-		String thisModuleName = moduleName;
-		moduleName = filename;
+		ModuleInfo prevModule = module;
+		module = new ModuleInfo() {
+			// filename here
+			@Override public ModuleProvider getIncludeProvider() { 
+				return toInclude;
+			}
+			@Override public String getName() { 
+				// TODO: This is probably bad idea and needs some parsing
+				return filename;
+			};
+			@Override public String getFileName() {
+				return toInclude.getSrcFile();
+			}
+		};
 		compile(parser.file_input(), bytecode, m);
-		moduleName = thisModuleName;
+		module = prevModule;
 	}
 
 	private void compileWhile(While_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
@@ -477,7 +492,7 @@ public class PythonCompiler {
 		// Compile condition
 		compile(ctx.test(), bytecode);
 		addBytecode(bytecode, Bytecode.TRUTH_VALUE, ctx.start);
-		PythonBytecode jump = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, ctx.start, moduleName);
+		PythonBytecode jump = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, ctx.start, getFunction(), module);
 		bytecode.add(jump);
 		// Compile body
 		compileSuite(ctx.suite(0), bytecode, cs); 
@@ -577,8 +592,9 @@ public class PythonCompiler {
 	}
 	
 	private void compileClass(ClassdefContext classdef, List<PythonBytecode> bytecode, DecoratorsContext dc) {
-		compilingFunction.push(null);
 		String className = classdef.nname().getText();
+		compilingFunction.push(null);
+		compilingClass.push(className);
 		cb = addBytecode(bytecode, Bytecode.LOADGLOBAL, classdef.start);
 		cb.stringValue = "type";
 		cb = addBytecode(bytecode, Bytecode.PUSH, classdef.start);
@@ -601,9 +617,7 @@ public class PythonCompiler {
 		fnc.args = new ArrayList<String>();
 		
 		List<PythonBytecode> fncb = new ArrayList<PythonBytecode>();
-		compilingClass.push(className);
 		doCompileFunction(classdef.suite(), fncb, classdef.suite().start, null);
-		compilingClass.pop();
 		
 		Utils.putPublic(fnc, "function_defaults", new DictObject());
 		
@@ -635,6 +649,7 @@ public class PythonCompiler {
 		
 		cb = addBytecode(bytecode, Bytecode.SAVE_LOCAL, classdef.stop);
 		cb.stringValue = className;
+		compilingClass.pop();
 		compilingFunction.pop();
 	}
 
@@ -654,7 +669,7 @@ public class PythonCompiler {
 		
 		String functionName = funcdef.nname().getText();
 		Utils.putPublic(fnc, "__name__", new StringObject(compilingClass.peek() == null ? functionName : compilingClass.peek() + "." + functionName));
-		Utils.putPublic(fnc, "__location__", new StringObject(moduleName + " line " + funcdef.start.getLine() + ", char " + funcdef.start.getCharPositionInLine()));
+		Utils.putPublic(fnc, "__location__", new StringObject(module + " line " + funcdef.start.getLine() + ", char " + funcdef.start.getCharPositionInLine()));
 				
 		
 		compilingFunction.push(functionName);
@@ -2191,7 +2206,7 @@ public class PythonCompiler {
 	
 	private PythonBytecode addBytecode(List<PythonBytecode> bytecode, Bytecode bctype, Token token) {
 		PythonBytecode rv;
-		rv = Bytecode.makeBytecode(bctype, token, moduleName);
+		rv = Bytecode.makeBytecode(bctype, token, getFunction(), module);
 		bytecode.add(rv);
 		return rv;
 	}	
@@ -2272,6 +2287,22 @@ public class PythonCompiler {
 		}	
 	}
 	
+	private String getFunction() {
+		if (compilingFunction.size() <= 1)
+			return Bytecode.NO_FUNCTION;
+		String fnName = compilingFunction.peek();
+		if (fnName == null) {
+			if (compilingClass.size() <= 1)
+				return Bytecode.NO_FUNCTION;
+			if (compilingClass.peek() == null)
+				return String.format("<class %s>", compilingClass.peek());
+			return String.format("<class %s>", compilingClass.peek());
+		}
+		if ((compilingClass.size() > 1) && (compilingClass.peek() != null))
+			return String.format("%s.%s", compilingClass.peek(), fnName);
+		return fnName;
+	}
+	
 	private class LoopStackItem implements ControllStackItem {
 		private List<PythonBytecode> bcs = new LinkedList<>();
 		private int start;
@@ -2282,28 +2313,28 @@ public class PythonCompiler {
 
 		@Override
 		public void outputContinue(Continue_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
-			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, moduleName);
+			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, getFunction(), module);
 			c.intValue = start;
 			bytecode.add(c); 
 		}
 
 		@Override
 		public void outputBreak(Break_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
-			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, moduleName); 
+			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, getFunction(), module); 
 			bytecode.add(c); 
 			addJump(c);
 		}
 		
 		@Override
 		public void outputFinallyBreakBlock(Try_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
-			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, moduleName); 
+			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, getFunction(), module); 
 			bytecode.add(c); 
 			addJump(c);
 		}
 
 		@Override
 		public void outputFinallyContinueBlock(Try_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
-			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, moduleName);
+			PythonBytecode c = Bytecode.makeBytecode(Bytecode.GOTO, ctx.start, getFunction(), module);
 			c.intValue = start;
 			bytecode.add(c); 
 		}

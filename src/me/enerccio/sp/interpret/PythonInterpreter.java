@@ -284,8 +284,9 @@ public class PythonInterpreter extends PythonObject {
 	 * @param e
 	 */
 	private void handleException(PythonExecutionException e) {
-		currentFrame.peekLast().exception = e.getException();
-		PythonObject stack = Utils.run("getattr", exception(), new StringObject("stack"));
+		PythonObject pe = e.getException();
+		currentFrame.peekLast().exception = pe;
+		PythonObject stack = pe.get("stack");
 		if (stack instanceof ListObject){
 			ListObject s = (ListObject)stack;
 			s.objects.add(makeStack());
@@ -297,8 +298,13 @@ public class PythonInterpreter extends PythonObject {
 	 * Inserts current instruction into stack
 	 * @return
 	 */
-	private StringObject makeStack() {
-		return new StringObject(makeStackString());
+	private PythonException.StackElement makeStack() {
+		FrameObject o = currentFrame.getLast();
+		if (o == null)
+			return PythonException.LAST_FRAME; 
+		if (o.debugLine < 0)
+			return PythonException.SYSTEM_FRAME;
+		return new PythonException.StackElement(o.debugModule, o.debugFunction, o.debugLine, o.debugInLine);
 	}
 
 	/**
@@ -325,8 +331,9 @@ public class PythonInterpreter extends PythonObject {
 
 		DebugInformation dd = o.compiled.getDebugInformation(spc);
 
-		o.debugModule = dd.modulename;
+		o.debugModule = dd.module;
 		o.debugLine = dd.lineno;
+		o.debugFunction = dd.function;
 		o.debugInLine = dd.charno;
 		
 		Bytecode opcode = o.nextOpcode();
