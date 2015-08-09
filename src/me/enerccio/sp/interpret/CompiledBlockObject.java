@@ -175,6 +175,7 @@ public class CompiledBlockObject extends PythonObject {
 			case JUMPIFNONE:
 			case JUMPIFNORETURN:
 			case JUMPIFTRUE:
+			case KCALL:
 			case PUSH_FRAME:
 			case RCALL:
 			case UNPACK_SEQUENCE:
