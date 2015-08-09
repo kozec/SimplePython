@@ -164,20 +164,15 @@ public class PythonInterpreter extends PythonObject {
 			if (((callable instanceof UserFunctionObject) || (callable instanceof UserMethodObject)) && internalCall){
 				int cfc = currentFrame.size();
 				((CallableObject)callable).call(new TupleObject(args), kwargs);
-				while (true){
-					ExecutionResult res = PythonInterpreter.interpreter.get().executeOnce();
-					if (res == ExecutionResult.FINISHED || res == ExecutionResult.EOF)
-						if (PythonInterpreter.interpreter.get().currentFrame.size() == cfc){
-							if (PythonInterpreter.interpreter.get().exception() != null){
-								PythonObject e = PythonInterpreter.interpreter.get().exception();
-								PythonInterpreter.interpreter.get().currentFrame.peekLast().exception = null;
-								throw new PythonExecutionException(e);
-							}
-							return returnee;
-						}
+				return executeAll(cfc);
+			} else {
+				int cfc = currentFrame.size();
+				returnee = ((CallableObject)callable).call(new TupleObject(args), kwargs);
+				if (cfc < currentFrame.size()){
+					returnee = executeAll(cfc);
 				}
-			} else
-				return returnee = ((CallableObject)callable).call(new TupleObject(args), kwargs);
+				return returnee;
+			}
 		} else {
 			PythonObject callableArg = callable.get(CallableObject.__CALL__, getLocalContext());
 			if (callableArg == null)
@@ -646,40 +641,16 @@ public class PythonInterpreter extends PythonObject {
 			// unpacks sequence onto stack
 			int cfc = currentFrame.size();
 			PythonObject seq = stack.pop();
-			PythonObject iterator;
-			PythonObject[] ss = new PythonObject[o.nextInt()];
+			int count = o.nextInt();
 			
-			try {
-				Utils.run("iter", seq);
-				if (currentFrame.size() != cfc)
-					executeAll(cfc);
-				iterator = returnee;
-				
-				for (int i=ss.length-1; i>=0; i--){
-					returnee = execute(true, Utils.get(iterator, GeneratorObject.NEXT), null);
-					if (currentFrame.size() != cfc)
-						executeAll(cfc);
-					ss[i] = returnee;
-				}
-			} catch (PythonExecutionException e){
-				if (PythonRuntime.isinstance(e.getException(), PythonRuntime.STOP_ITERATION).truthValue()){
-					throw Utils.throwException("ValueError", "too few values to unpack");
-				} else
-					throw e;
-			}
+			ListObject lo = (ListObject) PythonRuntime.LIST_TYPE.call(new TupleObject(seq), null);
+			if (lo.objects.size() > count)
+				throw Utils.throwException("TypeError", "too many values to unpack");
+			if (lo.objects.size() < count)
+				throw Utils.throwException("TypeError", "too few values to unpack");
 			
-			try {
-				execute(true, Utils.get(iterator, GeneratorObject.NEXT), null);
-				if (currentFrame.size() != cfc)
-					executeAll(cfc);
-				throw Utils.throwException("ValueError", "too many values to unpack");
-			} catch (PythonExecutionException e){
-				if (!Utils.run("isinstance", e.getException(), PythonRuntime.STOP_ITERATION).truthValue()){
-					throw e;
-				}
-			}
-			
-			for (PythonObject obj : ss)
+			Collections.reverse(lo.objects);
+			for (PythonObject obj : lo.objects)
 				stack.push(obj);
 			
 			break;
@@ -689,7 +660,7 @@ public class PythonInterpreter extends PythonObject {
 			PythonObject getItemFn = value.get("__getitem__", null);
 			if ((keysFn == null) || (getItemFn == null))
 				Utils.throwException("TypeError", "argument after ** must be a mapping, not " + value.toString());
-			iterator = Utils.run("iter", execute(true, keysFn, null)).get(GeneratorObject.NEXT);
+			PythonObject iterator = Utils.run("iter", execute(true, keysFn, null)).get(GeneratorObject.NEXT);
 			if (o.kwargs == null)
 				o.kwargs = new KwArgs.HashMapKWArgs();
 			try {
@@ -828,13 +799,13 @@ public class PythonInterpreter extends PythonObject {
 				for (int i=0; i<ol.size(); i++)
 					if (i != ol.size()-1)
 						ol.get(i).parentFrame = ol.get(i+1);
+				ol.get(0).pc -= 5;
 				Collections.reverse(ol);
 				GeneratorObject generator = new GeneratorObject(name, ol);
 				generator.newObject();
 				for (FrameObject fr : ol)
 					fr.ownedGenerator = generator;
 				returnee = generator;
-				o.pc -= 5;
 				o.returnHappened = true;
 				o.yielding = true;
 				removeLastFrame();

@@ -1,21 +1,28 @@
-class FakeDict:
-    def keys(self):
-        return "abce"
-    def __getitem__(self, key):
-        if key == 'a' : return 12
-        if key == 'b' : return 19
-        if key == 'c' : return 4851
-        if key == 'e' : return 3
-        raise IndexError
+def y(**kwargs):
+	print kwargs
+	
+print __name__
+print __thismodule__
 
-fak = FakeDict()
-for x in fak: print x, fak[x]
+def yielder():
+	for x in xrange(3):
+		yield x*x
+		
+x, y, z = yielder()
+print x, y, z
 
-def anca(a, b=1, c=2, e=3):
-    print (a, b, c, e)
-
-def mara(*a, **b):
-    print a, b
-
-tup = ('a', 'b', 'c')
-mara(1,2,3,z=17,*tup,**FakeDict())
+def test():
+	print ast.BYTECODE_NAMES
+	print ast.BYTECODE_NUMBERS
+	
+	"""
+	x = 1
+	print x.__format__("b")
+	print x.__format__("c")
+	print x.__format__("d")
+	print x.__format__("o")
+	print x.__format__("x")
+	print x.__format__("X")
+	print x.__format__("n")
+	print x.__format__("")
+	"""
