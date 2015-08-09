@@ -19,7 +19,6 @@ package me.enerccio.sp.compiler;
 
 import me.enerccio.sp.runtime.ModuleInfo;
 import me.enerccio.sp.types.PythonObject;
-import me.enerccio.sp.types.mappings.DictObject;
 
 /**
  * PythonBytecode is PythonObject representing single instruction of the interpret.
@@ -43,7 +42,6 @@ public class PythonBytecode extends PythonObject {
 	public PythonObject value;
 	public String stringValue;
 	public Object object;
-	public DictObject mapValue;
 	public boolean booleanValue;
 	
 	public PythonBytecode(){
