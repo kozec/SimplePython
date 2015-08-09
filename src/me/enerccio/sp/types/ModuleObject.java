@@ -17,9 +17,6 @@
  */
 package me.enerccio.sp.types;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.interpret.FrameObject;
@@ -44,8 +41,9 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 	public static final String __NAME__ = "__name__";
 	public static final String __DICT__ = "__dict__";
 	public static final String __THISMODULE__ = "__thismodule__";
+	public static final String __INJECTED__ = "__injected__";
 	private DictObject globals;
-	public Map<String, PythonObject> injectedGlobals = null;
+	private DictObject injectedGlobals = null;
 
 	public ModuleObject(ModuleProvider provider) {
 		this.provider = provider;
@@ -91,10 +89,15 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 	}
 	
 	public void injectGlobal(String key, PythonObject value) {
-		if (injectedGlobals == null)
-			injectedGlobals = new HashMap<String, PythonObject>();
-		globals.put(key, value);
+		if (injectedGlobals == null) {
+			injectedGlobals = new DictObject();
+			injectedGlobals.newObject();
+		}
 		injectedGlobals.put(key, value);
+	}
+	
+	public void setInjectGlobals(DictObject g) {
+		this.injectedGlobals = g;
 	}
 	
 	@Override
@@ -151,6 +154,10 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 		DictObject args = new DictObject();
 		args.put(__THISMODULE__, this);
 		args.put(__NAME__, new StringObject(provider.getModuleName()));
+		if (injectedGlobals != null) {
+			args.append(injectedGlobals);
+			args.put(__INJECTED__, injectedGlobals);
+		}
 		
 		PythonInterpreter.interpreter.get().setArgs(args);
 		

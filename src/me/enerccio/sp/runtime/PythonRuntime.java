@@ -230,7 +230,8 @@ public class PythonRuntime {
 		int index = name.lastIndexOf(".");
 		if (index > -1)
 			name = name.substring(0, index);
-		return loadModule(new ModuleProvider(name, filename, source, "", false)).getFirst();
+		ModuleObject rv = loadModule(new ModuleProvider(name, filename, source, "", false)).getFirst();;
+		return rv;
 	}
 	
 	/**
@@ -249,7 +250,7 @@ public class PythonRuntime {
 	 * @param moduleResolvePath
 	 * @return
 	 */
-	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, Map<String, PythonObject> injectGlobals){
+	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, DictObject injectGlobals){
 		if (moduleResolvePath == null)
 			moduleResolvePath = new StringObject("");
 		
@@ -302,8 +303,7 @@ public class PythonRuntime {
 		}
 		
 		if (injectGlobals != null)
-			for (String k : injectGlobals.keySet())
-				mo.injectGlobal(k, injectGlobals.get(k));		
+			mo.setInjectGlobals(injectGlobals);		
 		mo.initModule();
 		return mo;
 	}

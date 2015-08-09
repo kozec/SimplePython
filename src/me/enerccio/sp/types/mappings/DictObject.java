@@ -210,6 +210,11 @@ public class DictObject extends ContainerObject {
 		return c;
 	}
 	
+	public void append(DictObject o) {
+		for (PythonProxy k : o.backingMap.keySet())
+			backingMap.put(k, o.backingMap.get(k));
+	}
+	
 	@Override
 	public int getId(){
 		throw Utils.throwException("TypeError", "unhashable type '" + Utils.run("type", this) + "'");

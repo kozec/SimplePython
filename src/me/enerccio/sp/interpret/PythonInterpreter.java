@@ -622,14 +622,18 @@ public class PythonInterpreter extends PythonObject {
 			else
 				stack.push(stack.get(stack.size() - 1 - jv));
 			break;
-		case IMPORT:
+		case IMPORT: {
 			// import bytecode
 			String s1 = ((StringObject)o.compiled.getConstant(o.nextInt())).value;
 			String s2 = ((StringObject)o.compiled.getConstant(o.nextInt())).value;
+			PythonObject injected = null;
 			ModuleObject mm = (ModuleObject) 
 					environment().get(new StringObject(ModuleObject.__THISMODULE__), true, false);
-			pythonImport(environment(), s1, s2, null, mm == null ? null : mm.injectedGlobals);
+			if (mm != null)
+				injected = mm.get(ModuleObject.__INJECTED__); 
+			pythonImport(environment(), s1, s2, null, (injected instanceof DictObject) ? (DictObject)injected : null);
 			break;
+		}
 		case SWAP_STACK: {
 			// swaps head of the stack with value below it
 			PythonObject top = stack.pop();
@@ -906,7 +910,7 @@ public class PythonInterpreter extends PythonObject {
 	 * @param target
 	 */
 	private void pythonImport(EnvironmentObject environment, String variable,
-			String modulePath, PythonObject target, Map<String, PythonObject> injectGlobals) {
+			String modulePath, PythonObject target, DictObject injectGlobals) {
 		if (modulePath == null || modulePath.equals("")){
 			if (target == null){
 				synchronized (PythonRuntime.runtime){
