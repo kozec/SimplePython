@@ -164,7 +164,7 @@ public class Coerce {
 			@Override
 			public Object coerce(PythonObject o, Class<?> clazz) throws CastFailedException {
 				if (o instanceof NumberObject)
-					return Integer.valueOf(((NumberObject)o).getJavaInt().intValue());
+					return Integer.valueOf((int)((NumberObject)o).getJavaInt());
 				
 				throw new CastFailedException("Can't convert " + o.toString() + " to Integer");
 			}
@@ -175,7 +175,7 @@ public class Coerce {
 			@Override
 			public Object coerce(PythonObject o, Class<?> clazz) throws CastFailedException {
 				if (o instanceof NumberObject)
-					return ((NumberObject)o).getJavaInt().intValue();
+					return ((NumberObject)o).getJavaInt();
 				
 				throw new CastFailedException("Can't convert " + o.toString() + " to int");
 			}
@@ -198,7 +198,7 @@ public class Coerce {
 			@Override
 			public Object coerce(PythonObject o, Class<?> clazz) throws CastFailedException {
 				if (o instanceof NumberObject)
-					return ((NumberObject)o).getJavaInt().longValue();
+					return ((NumberObject)o).getJavaInt();
 				
 				throw new CastFailedException("Can't convert " + o.toString() + " to long");
 			}
