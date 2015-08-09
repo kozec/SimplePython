@@ -96,6 +96,9 @@ import me.enerccio.sp.types.types.XRangeTypeObject;
 import me.enerccio.sp.utils.CastFailedException;
 import me.enerccio.sp.utils.Coerce;
 import me.enerccio.sp.utils.Pair;
+import me.enerccio.sp.utils.StaticTools.DiamondResolver;
+import me.enerccio.sp.utils.StaticTools.IOUtils;
+import me.enerccio.sp.utils.StaticTools.ParserGenerator;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -453,7 +456,11 @@ public class PythonRuntime {
 					
 					pythonParser p;
 					try {
-						p = Utils.parse(new ModuleProvider("builtin", "builtin", Utils.toByteArray(getClass().getClassLoader().getResourceAsStream("builtin.py")), null, false));
+						p = ParserGenerator.parse(new ModuleProvider("builtin", 
+																	 "builtin", 
+																	 IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("builtin.py")), 
+																	 null, 
+																	 false));
 					} catch (Exception e1) {
 						throw new PythonException("Failed to initialize python!");
 					}
@@ -559,7 +566,7 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject mro(ClassObject clazz){
-		List<ClassObject> ll = Utils.resolveDiamonds(clazz);
+		List<ClassObject> ll = DiamondResolver.resolveDiamonds(clazz);
 		Collections.reverse(ll);
 		TupleObject to = (TupleObject) Utils.list2tuple(ll);
 		to.newObject();

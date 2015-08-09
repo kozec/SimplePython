@@ -125,6 +125,7 @@ import me.enerccio.sp.types.types.ListTypeObject;
 import me.enerccio.sp.types.types.ObjectTypeObject;
 import me.enerccio.sp.types.types.SliceTypeObject;
 import me.enerccio.sp.types.types.TupleTypeObject;
+import me.enerccio.sp.utils.StaticTools;
 import me.enerccio.sp.utils.Utils;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -467,7 +468,7 @@ public class PythonCompiler {
 		final ModuleProvider toInclude = PythonRuntime.runtime.getModuleSource(filename, m.getIncludeProvider().getPackageResolve());
 		pythonParser parser;
 		try {
-			parser = Utils.parse(toInclude);
+			parser = StaticTools.ParserGenerator.parse(toInclude);
 		} catch (Exception e) {
 			throw Utils.throwException("SyntaxError", "failed to parse source code of " + filename, e);
 		}
