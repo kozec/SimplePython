@@ -695,6 +695,10 @@ public class PythonRuntime {
 		
 	};
 	
+	public static PythonObject setattr(PythonObject o, String attribute, PythonObject value){
+		return o.set(attribute, PythonInterpreter.interpreter.get().getLocalContext(), value);
+	}
+	
 	public static PythonObject getattr(PythonObject o, String attribute){
 		return getattr(o, attribute, false);
 	}
