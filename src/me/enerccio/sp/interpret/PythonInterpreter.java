@@ -282,8 +282,8 @@ public class PythonInterpreter extends PythonObject {
 	private void handleException(PythonExecutionException e) {
 		PythonObject pe = e.getException();
 		currentFrame.peekLast().exception = pe;
-		PythonObject stack = pe.get("stack");
-		if (stack instanceof ListObject){
+		PythonObject stack = pe.get("stack", null);
+		if (stack instanceof ListObject && !e.noStackGeneration){
 			ListObject s = (ListObject)stack;
 			s.objects.add(makeStack());
 		}
@@ -771,8 +771,11 @@ public class PythonInterpreter extends PythonObject {
 		}
 		case RERAISE: {
 			PythonObject s = stack.pop();
-			if (s != NoneObject.NONE)
-				throw new PythonExecutionException(s);
+			if (s != NoneObject.NONE) {
+				PythonExecutionException pee = new PythonExecutionException(s);
+				pee.noStackGeneration(true);
+				throw pee;
+			}
 			break;
 		}
 		case PUSH_FRAME:
