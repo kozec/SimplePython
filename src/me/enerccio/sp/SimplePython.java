@@ -19,6 +19,7 @@ package me.enerccio.sp;
 
 import java.util.Collection;
 
+import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.runtime.PythonRuntime;
@@ -89,7 +90,7 @@ public class SimplePython {
 	public static PythonObject executeFunction(ModuleObject module, String function){
 		CallableObject c = (CallableObject) module.getField(function);
 		if (c == null)
-			throw new RuntimeException("Module has no function '" + function + "'");
+			throw new TypeError("Module has no function '" + function + "'");
 		
 		c.call(new TupleObject(), null);
 		return PythonInterpreter.interpreter.get().executeAll(0);

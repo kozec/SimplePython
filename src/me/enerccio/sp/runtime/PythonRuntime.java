@@ -40,7 +40,6 @@ import me.enerccio.sp.interpret.ExecutionResult;
 import me.enerccio.sp.interpret.InternalJavaPathResolver;
 import me.enerccio.sp.interpret.KwArgs;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
-import me.enerccio.sp.interpret.PythonException;
 import me.enerccio.sp.interpret.PythonExecutionException;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.parser.pythonParser;
@@ -131,6 +130,8 @@ public class PythonRuntime {
 	public static ClassObject STOP_ITERATION;
 	public static ClassObject GENERATOR_EXIT;
 	public static ClassObject INDEX_ERROR;
+	public static ClassObject TYPE_ERROR;
+	public static ClassObject VALUE_ERROR;
 	
 	/**
 	 * Waits until creation of new interprets is possible
@@ -462,7 +463,7 @@ public class PythonRuntime {
 																	 null, 
 																	 false));
 					} catch (Exception e1) {
-						throw new PythonException("Failed to initialize python!");
+						throw new RuntimeException("Failed to initialize python!");
 					}
 					
 					PythonCompiler c = new PythonCompiler();
@@ -481,8 +482,15 @@ public class PythonRuntime {
 							break;
 						if (r == ExecutionResult.EOF)
 							continue;
-						throw new PythonException("Failed to initialize python!");
+						throw new RuntimeException("Failed to initialize python!");
 					}
+					
+					ERROR			= (ClassObject)globals.getItem("Error");
+					STOP_ITERATION	= (ClassObject)globals.getItem("StopIteration");
+					GENERATOR_EXIT	= (ClassObject)globals.getItem("GeneratorExit");
+					INDEX_ERROR		= (ClassObject)globals.getItem("IndexError");
+					TYPE_ERROR		= (ClassObject)globals.getItem("TypeError");
+					VALUE_ERROR		= (ClassObject)globals.getItem("ValueError");
 					
 					buildingGlobals.set(false);
 				}

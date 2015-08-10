@@ -20,7 +20,6 @@ package me.enerccio.sp.types.types;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.interpret.KwArgs;
 import me.enerccio.sp.types.PythonObject;
-import me.enerccio.sp.types.base.ClassInstanceObject;
 import me.enerccio.sp.types.sequences.StringObject;
 import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.utils.Utils;
