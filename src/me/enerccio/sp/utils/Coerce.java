@@ -281,7 +281,29 @@ public class Coerce {
 			public Object coerce(PythonObject o, Class<?> clazz) throws CastFailedException {
 				if (o instanceof PointerObject)
 					return ((PointerObject) o).getObject();
-				// TODO: Coerce int and stuff?
+				else if (o instanceof NumberObject) {
+					NumberObject n = (NumberObject)o;
+					switch (n.getNumberType()) {
+					case BOOL:
+						return n.truthValue() ? Boolean.TRUE : Boolean.FALSE;
+					case COMPLEX:
+						return n;
+					case FLOAT:
+						if (PythonRuntime.USE_DOUBLE_FLOAT)
+							return n.doubleValue();
+						else
+							return n.floatValue();
+					case INT:
+						return n.intValue();
+					case LONG:
+						if (PythonRuntime.USE_INT_ONLY)
+							return n.intValue();
+						else
+							return n.longValue();
+					}
+				} else if (o instanceof StringObject) {
+					return o.toString();
+				}
 				return o;
 			}
 		});
