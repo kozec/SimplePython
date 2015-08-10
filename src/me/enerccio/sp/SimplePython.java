@@ -82,20 +82,12 @@ public class SimplePython {
 		return t;
 	}
 	
-	public static void setField(PythonObject object, String fieldName, PythonObject value){
-		object.set(fieldName, null, value);
-	}
-	
-	public static PythonObject getField(PythonObject o, String fieldName){
-		return PythonRuntime.getattr(o, fieldName);
-	}
-	
 	public static PythonObject executeFunction(String module, String function){
 		return executeFunction(getModule(module), function);
 	}
 	
 	public static PythonObject executeFunction(ModuleObject module, String function){
-		CallableObject c = (CallableObject) getField(module, function);
+		CallableObject c = (CallableObject) module.get(function);
 		if (c == null)
 			return null;
 		

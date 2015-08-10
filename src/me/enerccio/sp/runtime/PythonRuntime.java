@@ -46,6 +46,7 @@ import me.enerccio.sp.interpret.PythonException;
 import me.enerccio.sp.interpret.PythonExecutionException;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.parser.pythonParser;
+import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
@@ -686,50 +687,32 @@ public class PythonRuntime {
 		return OBJECT_TYPE;
 	}
 
-	private static final ThreadLocal<Stack<PythonObject>> accessorGetattr = new ThreadLocal<Stack<PythonObject>>(){
-
-		@Override
-		protected Stack<PythonObject> initialValue() {
-			return new Stack<PythonObject>();
-		}
-		
-	};
-	
 	public static PythonObject setattr(PythonObject o, String attribute, PythonObject value){
+		AugumentedPythonObject gaf = o.fields.get(ClassInstanceObject.__SETATTR__);
+		PythonObject __ga__ = (gaf == null) ? null : gaf.object;
+		if (__ga__ != null)
+			return PythonInterpreter.interpreter.get().execute(false, __ga__, null, new StringObject(attribute));
 		return o.set(attribute, PythonInterpreter.interpreter.get().getLocalContext(), value);
 	}
 	
 	public static PythonObject getattr(PythonObject o, String attribute){
-		return getattr(o, attribute, false);
-	}
-	
-	protected static PythonObject getattr(PythonObject o, String attribute, boolean skip) {
-		if (!attribute.equals(ClassInstanceObject.__GETATTRIBUTE__)){
-				PythonObject getattr = getattr(o, ClassInstanceObject.__GETATTRIBUTE__, true);
-				if (getattr != null && !(o instanceof ClassObject))
-					return PythonInterpreter.interpreter.get().execute(false, getattr, null, new StringObject(attribute));
-		}
+		AugumentedPythonObject gaf = o.fields.get(ClassInstanceObject.__GETATTRIBUTE__);
+		PythonObject __ga__ = (gaf == null) ? null : gaf.object;
+		if (attribute.equals(ClassInstanceObject.__GETATTRIBUTE__))
+			return __ga__;
+		
+		if (__ga__ != null)
+			return PythonInterpreter.interpreter.get().execute(false, __ga__, null, new StringObject(attribute));
 		
 		PythonObject value = o.get(attribute, PythonInterpreter.interpreter.get().getLocalContext());
-		if (value == null){
-			if (skip == true)
-				return null;
-			
-			if (accessorGetattr.get().size() != 0 && accessorGetattr.get().peek() == o){
-				throw new NoGetattrException();
-			}
-			accessorGetattr.get().push(o);
-			try {
-				PythonObject getattr = getattr(o, ClassInstanceObject.__GETATTR__);
-				value = PythonInterpreter.interpreter.get().execute(false, getattr, null, new StringObject(attribute));
-			} catch (NoGetattrException e) {
-				throw Utils.throwException("AttributeError", String.format("%s object has no attribute '%s'", o, attribute));
-			} finally {
-
-				accessorGetattr.get().pop();
-			}
+		if (value == null) {
+			gaf = o.fields.get(ClassInstanceObject.__GETATTR__);
+			__ga__ = (gaf == null) ? null : gaf.object;
+			if (__ga__ != null)
+				return PythonInterpreter.interpreter.get().execute(false, __ga__, null, new StringObject(attribute));
+			throw Utils.throwException("AttributeError", String.format("%s object has no attribute '%s'", o, attribute));
 		}
-		return value;
+		return value;	
 	}
 	
 	protected static PythonObject hasattr(PythonObject o, String attribute) {
@@ -738,6 +721,10 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject delattr(PythonObject o, String attribute) {
+		AugumentedPythonObject gaf = o.fields.get(ClassInstanceObject.__DELATTR__);
+		PythonObject __ga__ = (gaf == null) ? null : gaf.object;
+		if (__ga__ != null)
+			return PythonInterpreter.interpreter.get().execute(false, __ga__, null, new StringObject(attribute));
 		return o.delete(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 	}
 	
