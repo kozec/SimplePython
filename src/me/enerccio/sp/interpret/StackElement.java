@@ -17,7 +17,7 @@ public class StackElement extends PythonObject {
 	public final int line;
 	public final int character;
 	public final String function;
-	
+
 	private StackElement() {
 		line = character = -1;
 		module = null;
