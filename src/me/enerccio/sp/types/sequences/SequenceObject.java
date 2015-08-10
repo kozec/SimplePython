@@ -71,6 +71,7 @@ public abstract class SequenceObject extends ContainerObject {
 	
 	public abstract PythonObject get(PythonObject key);
 	public abstract PythonObject get(int i);
+	public abstract PythonObject add(PythonObject b);
 	
 	public abstract PythonObject __iter__(); 
 
