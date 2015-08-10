@@ -281,6 +281,7 @@ public class PythonInterpreter extends PythonObject {
 	 * Handles the exception chain.
 	 * @param e
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void handleException(PythonExecutionException e) {
 		PythonObject pe = e.getException();
 		currentFrame.peekLast().exception = pe;
@@ -288,6 +289,9 @@ public class PythonInterpreter extends PythonObject {
 		if (stack instanceof ListObject && !e.noStackGeneration){
 			ListObject s = (ListObject)stack;
 			s.objects.add(makeStack());
+			if (e.getCause() instanceof PythonException) {
+				((PythonException)e.getCause()).addPythonStack((List)s.objects);
+			}
 		}
 		removeLastFrame();
 	}
@@ -892,8 +896,10 @@ public class PythonInterpreter extends PythonObject {
 						throw new PythonExecutionException(e, t);
 					} else {
 						PythonException pe = PythonException.translate(e);
-						if (pe != null)
+						if (pe != null) {
+							
 							throw pe;
+						}
 						throw new PythonExecutionException(e);
 					}
 				}
