@@ -57,6 +57,7 @@ public class DictObject extends ContainerObject {
 	
 	static {
 		try {
+			sfields.putAll(ContainerObject.getSFields());
 			sfields.put(__GETITEM__,	new JavaMethodObject(DictObject.class, "getItem"));
 			sfields.put(__SETITEM__,	new JavaMethodObject(DictObject.class, "setItem")); 
 			sfields.put("keys",			new JavaMethodObject(DictObject.class, "keys")); 
@@ -65,11 +66,20 @@ public class DictObject extends ContainerObject {
 			e.printStackTrace();
 		}
 	}
+	protected static Map<String, JavaMethodObject> getSFields(){ return sfields; }
+	@Override
+	public Set<String> getGenHandleNames() {
+		return sfields.keySet();
+	}
+
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return sfields;
+	}
 	
 	@Override
 	public void newObject() {
 		super.newObject();
-		bindMethods(sfields);
 	};
 	
 	public HashHashMap<PythonObject> backingMap = new HashHashMap<PythonObject>();

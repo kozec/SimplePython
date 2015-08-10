@@ -497,6 +497,7 @@ public class PythonRuntime {
 		synchronized (o){
 			synchronized (o.fields){
 				fields.addAll(o.fields.keySet());
+				fields.addAll(o.getGenHandleNames());
 				
 				if (o.fields.containsKey("__dict__")){
 					PythonObject dd = o.fields.get("__dict__").object;
@@ -515,8 +516,8 @@ public class PythonRuntime {
 			}
 		}
 		
-		if (o.fields.containsKey("__dir__")){
-			PythonObject dirCall = PythonInterpreter.interpreter.get().execute(true, o.fields.get("__dir__").object, null);
+		if (o.get("__dir__", null) != null){
+			PythonObject dirCall = PythonInterpreter.interpreter.get().execute(true, o.get("__dir__", null), null);
 			if (!(dirCall instanceof ListObject))
 				throw Utils.throwException("TypeError", "dir(): __dir__ must return list");
 			ListObject lo = (ListObject) dirCall;

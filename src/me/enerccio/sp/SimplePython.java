@@ -87,9 +87,9 @@ public class SimplePython {
 	}
 	
 	public static PythonObject executeFunction(ModuleObject module, String function){
-		CallableObject c = (CallableObject) module.get(function);
+		CallableObject c = (CallableObject) module.getField(function);
 		if (c == null)
-			return null;
+			throw new RuntimeException("Module has no function '" + function + "'");
 		
 		c.call(new TupleObject(), null);
 		return PythonInterpreter.interpreter.get().executeAll(0);

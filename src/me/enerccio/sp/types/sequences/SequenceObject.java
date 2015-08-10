@@ -19,6 +19,7 @@ package me.enerccio.sp.types.sequences;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import me.enerccio.sp.types.Arithmetics;
 import me.enerccio.sp.types.PythonObject;
@@ -45,6 +46,7 @@ public abstract class SequenceObject extends ContainerObject {
 	
 	static {
 		try {
+			sfields.putAll(ContainerObject.getSFields());
 			sfields.put(__ITER__, 		JavaMethodObject.noArgMethod(SequenceObject.class, "__iter__"));
 			sfields.put(__GETITEM__,	new JavaMethodObject(SequenceObject.class, "get", PythonObject.class));
 			sfields.put(__ADD__,		new JavaMethodObject(SequenceObject.class, "add", PythonObject.class));
@@ -52,11 +54,20 @@ public abstract class SequenceObject extends ContainerObject {
 			e.printStackTrace();
 		}
 	}
+	protected static Map<String, JavaMethodObject> getSFields(){ return sfields; }
+	@Override
+	public Set<String> getGenHandleNames() {
+		return sfields.keySet();
+	}
+
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return sfields;
+	}
 
 	@Override
 	public void newObject() {
 		super.newObject();
-		bindMethods(sfields);
 	}
 	
 	public PythonObject add(PythonObject other){

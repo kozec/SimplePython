@@ -18,6 +18,8 @@
 package me.enerccio.sp.types.callables;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.interpret.KwArgs;
@@ -52,6 +54,16 @@ public class ClassObject extends CallableObject {
 	
 	public ClassObject(){
 		
+	}
+	
+	@Override
+	public Set<String> getGenHandleNames() {
+		return PythonObject.sfields.keySet();
+	}
+
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return PythonObject.sfields;
 	}
 	
 	@Override

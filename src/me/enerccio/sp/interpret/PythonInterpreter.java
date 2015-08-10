@@ -42,6 +42,7 @@ import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.callables.CallableObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.callables.ClassObject;
+import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.callables.UserMethodObject;
 import me.enerccio.sp.types.iterators.GeneratorObject;
@@ -548,15 +549,15 @@ public class PythonInterpreter extends PythonObject {
 				else
 					stack.push(value.truthValue() ? BoolObject.TRUE : BoolObject.FALSE);
 				break;
-			} else if (value.fields.containsKey("__nonzero__")) {
-				runnable = value.fields.get("__nonzero__").object;
+			} else if (value.get("__nonzero__", null) != null) {
+				runnable = value.get("__nonzero__", null);
 				returnee = execute(true, runnable, null);
 				o.accepts_return = true;
 				if (jv == 1)
 					o.pc-=5;
 				break;
-			} else if (value.fields.containsKey("__len__")) {
-				runnable = value.fields.get("__len__").object;
+			} else if (value.get("__len__", null) != null) {
+				runnable = value.get("__len__", null);
 				returnee = execute(true, runnable, null);
 				o.accepts_return = true;
 				o.pc-=5;
@@ -953,8 +954,8 @@ public class PythonInterpreter extends PythonObject {
 						return;
 					}
 				} 
-				if (target.fields.containsKey(mm)) {
-					pythonImport(environment, variable, modulePath, target.fields.get(mm).object, injectGlobals);
+				if (target.get(mm, null) != null) {
+					pythonImport(environment, variable, modulePath, target.get(mm, null), injectGlobals);
 					return;
 				} else {
 					target = PythonRuntime.runtime.getModule(mm, new StringObject(((ModuleObject)target).provider.getPackageResolve()), injectGlobals);
@@ -1020,5 +1021,14 @@ public class PythonInterpreter extends PythonObject {
 
 	public void setClosure(List<DictObject> closure) {
 		this.currentClosure = closure;
+	}
+	@Override
+	public Set<String> getGenHandleNames() {
+		return new HashSet<String>();
+	}
+
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return new HashMap<String, JavaMethodObject>();
 	}
 }

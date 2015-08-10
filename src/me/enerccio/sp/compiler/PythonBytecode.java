@@ -17,8 +17,12 @@
  */
 package me.enerccio.sp.compiler;
 
+import java.util.Map;
+import java.util.Set;
+
 import me.enerccio.sp.runtime.ModuleInfo;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.callables.JavaMethodObject;
 
 /**
  * PythonBytecode is PythonObject representing single instruction of the interpret.
@@ -699,4 +703,13 @@ public class PythonBytecode extends PythonObject {
 		return getOpcode().toString();
 	}
 	
+	@Override
+	public Set<String> getGenHandleNames() {
+		return PythonObject.sfields.keySet();
+	}
+
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return PythonObject.sfields;
+	}
 }

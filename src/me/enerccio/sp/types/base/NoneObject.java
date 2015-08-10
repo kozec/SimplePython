@@ -17,7 +17,11 @@
  */
 package me.enerccio.sp.types.base;
 
+import java.util.Map;
+import java.util.Set;
+
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -53,6 +57,15 @@ public class NoneObject extends PythonObject {
 	protected synchronized boolean create(String key) {
 		// Can't create fields here
 		return false;
+	}
+
+	public Set<String> getGenHandleNames() {
+		return PythonObject.sfields.keySet();
+	}
+
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return PythonObject.sfields;
 	}
 
 	@Override
