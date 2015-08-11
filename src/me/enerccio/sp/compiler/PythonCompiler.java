@@ -29,7 +29,7 @@ import java.util.Stack;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import me.enerccio.sp.compiler.PythonBytecode.Call;
 import me.enerccio.sp.compiler.PythonBytecode.Pop;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.parser.pythonParser;
@@ -130,6 +130,8 @@ import me.enerccio.sp.utils.StaticTools;
 import me.enerccio.sp.utils.Utils;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Compiles source into Python Bytecode
@@ -1333,7 +1335,10 @@ public class PythonCompiler {
 		if (fncb.get(fncb.size()-1) instanceof Pop){
 			fncb.remove(fncb.size()-1);
 			cb = addBytecode(fncb, Bytecode.RETURN, ctx.stop);
-			cb.intValue = 1;	
+			cb.intValue = 1;
+		} else if (fncb.get(fncb.size()-1) instanceof Call){
+			cb = addBytecode(fncb, Bytecode.RETURN, ctx.stop);
+			cb.intValue = 1;
 		} else {
 			cb = addBytecode(fncb, Bytecode.PUSH, ctx.stop);
 			cb.value = NoneObject.NONE;
@@ -1342,9 +1347,12 @@ public class PythonCompiler {
 		}
 		
 		fnc.block = new CompiledBlockObject(fncb);
+		Utils.putPublic(fnc, "function_defaults", new DictObject());
+		fnc.args = new ArrayList<String>();
 		
 		cb = addBytecode(bytecode, Bytecode.PUSH, ctx.stop);
 		cb.value = fnc;
+		addBytecode(bytecode, Bytecode.RESOLVE_CLOSURE, ctx.stop);
 		
 		cb = addBytecode(bytecode, Bytecode.MAKE_FUTURE, ctx.stop);
 		cb.object = inspectVariables(ctx).toArray(new String[] {} );
