@@ -19,14 +19,10 @@ package me.enerccio.sp.errors;
 
 import me.enerccio.sp.runtime.PythonRuntime;
 
-public class ValueError extends PythonException {
-	private static final long serialVersionUID = 84512156121L;
+public class AttributeError extends PythonException {
+	private static final long serialVersionUID = 54215546315414L;
 	
-	public ValueError(String message) {
-		super(PythonRuntime.VALUE_ERROR, message, null);
-	}
-
-	public ValueError(String message, Exception e) {
-		super(PythonRuntime.VALUE_ERROR, message, e);
+	public AttributeError(String message) {
+		super(PythonRuntime.ATTRIBUTE_ERROR, message);
 	}
 }

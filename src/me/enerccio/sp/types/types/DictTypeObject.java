@@ -20,12 +20,12 @@ package me.enerccio.sp.types.types;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.interpret.KwArgs;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.mappings.DictObject;
 import me.enerccio.sp.types.sequences.ListObject;
 import me.enerccio.sp.types.sequences.TupleObject;
-import me.enerccio.sp.utils.Utils;
 
 /**
  * dict()
@@ -62,18 +62,18 @@ public class DictTypeObject extends TypeObject {
 					DictObject m = new DictObject();
 					for (TupleObject to : tuples)
 						if (to.len() != 2)
-							throw Utils.throwException("TypeError", "dict(): parameter 1 must be list of tuples with two elements");
+							throw new TypeError("dict(): parameter 1 must be list of tuples with two elements");
 						else
 							m.backingMap.put(to.getObjects()[0], to.getObjects()[1]);
 					return m;
 				}
 			} catch (ClassCastException e){
-				throw Utils.throwException("TypeError", "dict(): parameter 1 must be list of tuples with two elements");
+				throw new TypeError("dict(): parameter 1 must be list of tuples with two elements");
 			}
-			throw Utils.throwException("TypeError", "dict(): parameter 1 must be list of tuples with two elements");
+			throw new TypeError("dict(): parameter 1 must be list of tuples with two elements");
 		}
 		
-		throw Utils.throwException("TypeError", "dict(): wrong mumber of parameters, expected 1 or 0, got " + args.len());
+		throw new TypeError("dict(): wrong mumber of parameters, expected 1 or 0, got " + args.len());
 	}
 
 	

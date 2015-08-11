@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import me.enerccio.sp.interpret.PythonInterpreter;
+import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.interpret.KwArgs;
+import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.types.AccessRestrictions;
 import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.PythonObject;
@@ -85,7 +86,7 @@ public class ClassObject extends CallableObject {
 		try {
 			return ((DictObject)fields.get(__DICT__).object).doGet(o);
 		} catch (NullPointerException e){
-			throw Utils.throwException("AttributeError", String.format("%s object has no attribute '%s'", Utils.run("type", this), o.value));
+			throw new AttributeError(String.format("%s object has no attribute '%s'", Utils.run("typename", this), o.value));
 		}
 	}
 	
@@ -98,7 +99,7 @@ public class ClassObject extends CallableObject {
 			}
 			return NoneObject.NONE;
 		} catch (NullPointerException e){
-			throw Utils.throwException("AttributeError", String.format("%s object has no attribute '%s'", Utils.run("type", this), o.value));
+			throw new AttributeError(String.format("%s object has no attribute '%s'", Utils.run("typename", this), o.value));
 		}
 	}
 
@@ -186,4 +187,25 @@ public class ClassObject extends CallableObject {
 		return "<class " + get(__NAME__, this).toString() + ">";
 	}
 
+	@Override
+	public PythonObject set(String key, PythonObject localContext, PythonObject value) {
+		if (key.equals(__NAME__) || key.equals(__DICT__))
+			throw new AttributeError("'" + 
+					Utils.run("str", Utils.run("typename", this)) + "' object attribute '" + key + "' is read only");
+		if (fields.containsKey(key))
+			return super.set(key, localContext, value);
+		else {
+			((DictObject)fields.get(__DICT__).object).put(key, value);
+		}
+		return NoneObject.NONE;
+	}
+	
+
+	@Override
+	public synchronized PythonObject get(String key, PythonObject localContext) {
+		PythonObject o = super.get(key, localContext);
+		if (o == null && fields.containsKey(__DICT__))
+			o = ((DictObject)fields.get(__DICT__).object).getItem(key);
+		return o;
+	}
 }

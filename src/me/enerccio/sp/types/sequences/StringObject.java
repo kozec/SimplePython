@@ -145,13 +145,13 @@ public class StringObject extends ImmutableSequenceObject implements SimpleIDAcc
 	public String capitalize(){
 		return value.toUpperCase();
 	}
-	
+
 	@Override
 	public void deleteKey(PythonObject key) {
-		throw Utils.throwException("TypeError", "'" + Utils.run("typename", this) + "' object doesn't support item deletion");
+		throw new TypeError("'" + Utils.run("typename", this) + "' object doesn't support item deletion");
 	}
-	
-	public PythonObject mul(PythonObject b){
+
+	public PythonObject mul(PythonObject b) {
 		if (b instanceof NumberObject) {
 			if (((NumberObject)b).getNumberType() == NumberObject.NumberType.INT) {
 				// "a" * 5 -> "aaaaa"
@@ -163,11 +163,11 @@ public class StringObject extends ImmutableSequenceObject implements SimpleIDAcc
 		}
 		throw new TypeError("can't multiply sequence by non-int of type '" + b + "'");
 	}
-	
-	public PythonObject mod(PythonObject b){
+
+	public PythonObject mod(PythonObject b) {
 		throw new TypeError("string format not yet supported"); // :(
 	}
-	
+
 	public PythonObject add(PythonObject b) {
 		if (b instanceof NumberObject)
 			return new StringObject(value + b.toString());

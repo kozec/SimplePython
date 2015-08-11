@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.parser.pythonLexer;
 import me.enerccio.sp.parser.pythonParser;
 import me.enerccio.sp.runtime.ModuleProvider;
@@ -100,7 +101,7 @@ public class StaticTools {
 				if (suitable == null) {
 					for (List<ClassObject> cllist : mergeList)
 						if (cllist.size() != 0)
-							throw Utils.throwException("TypeError", "unsuitable class hierarchy!");
+							throw new TypeError("unsuitable class hierarchy!");
 					return m;
 				}
 				

@@ -20,6 +20,7 @@ package me.enerccio.sp.types.system;
 import java.util.Map;
 import java.util.Set;
 
+import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.utils.Utils;
@@ -42,10 +43,10 @@ public class StaticMethodObject extends PythonObject {
 	public PythonObject set(String key, PythonObject localContext,
 			PythonObject value) {
 		if (!fields.containsKey(key))
-			throw Utils.throwException("AttributeError", "'" + 
-					Utils.run("str", Utils.run("type", this)) + "' object has no attribute '" + key + "'");
-		throw Utils.throwException("AttributeError", "'" + 
-				Utils.run("str", Utils.run("type", this)) + "' object attribute '" + key + "' is read only");
+			throw new AttributeError("'" + 
+					Utils.run("str", Utils.run("typename", this)) + "' object has no attribute '" + key + "'");
+		throw new AttributeError("'" + 
+				Utils.run("str", Utils.run("typename", this)) + "' object attribute '" + key + "' is read only");
 	}
 
 	@Override
