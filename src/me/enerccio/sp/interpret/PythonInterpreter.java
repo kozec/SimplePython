@@ -644,11 +644,8 @@ public class PythonInterpreter extends PythonObject {
 			// import bytecode
 			String s1 = ((StringObject)o.compiled.getConstant(o.nextInt())).value;
 			String s2 = ((StringObject)o.compiled.getConstant(o.nextInt())).value;
-			PythonObject injected = null;
-			ModuleObject mm = (ModuleObject) 
-					environment().get(new StringObject(ModuleObject.__THISMODULE__), true, false);
-			if (mm != null)
-				injected = mm.get(ModuleObject.__INJECTED__); 
+			PythonObject injected = (PythonObject) 
+					environment().get(new StringObject(ModuleObject.__INJECTED__), true, false);
 			pythonImport(environment(), s1, s2, null, (injected instanceof DictObject) ? (DictObject)injected : null);
 			break;
 		}

@@ -45,7 +45,8 @@ import me.enerccio.sp.utils.Utils;
  */
 public class ListObject extends MutableSequenceObject implements SimpleIDAccessor, InternallyIterable  {
 	private static final long serialVersionUID = 16L;
-
+	public List<PythonObject> objects = Collections.synchronizedList(new ArrayList<PythonObject>());
+	
 	public ListObject(){
 		
 	}
@@ -92,6 +93,12 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 		}
 	}
 
+	public ListObject(String... strings) {
+		this();
+		for (String s : strings)
+			objects.add(new StringObject(s));
+	}
+
 	private static Map<String, JavaMethodObject> sfields = new HashMap<String, JavaMethodObject>();
 	
 	static {
@@ -103,6 +110,7 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 		}
 	}
 	protected static Map<String, JavaMethodObject> getSFields(){ return sfields; }
+	
 	@Override
 	public Set<String> getGenHandleNames() {
 		return sfields.keySet();
@@ -122,8 +130,6 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 		objects.add(value);
 		return this;
 	}
-	
-	public List<PythonObject> objects = Collections.synchronizedList(new ArrayList<PythonObject>());
 	
 	public PythonObject add(PythonObject b) {
 		if (b instanceof ListObject) {

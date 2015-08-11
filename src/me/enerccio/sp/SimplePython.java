@@ -17,8 +17,6 @@
  */
 package me.enerccio.sp;
 
-import java.util.Collection;
-
 import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
 import me.enerccio.sp.interpret.PythonInterpreter;
@@ -29,7 +27,6 @@ import me.enerccio.sp.types.callables.CallableObject;
 import me.enerccio.sp.types.pointer.PointerFactory;
 import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.sequences.TupleObject;
-import me.enerccio.sp.utils.Coerce;
 
 public class SimplePython {
 
@@ -69,18 +66,6 @@ public class SimplePython {
 	
 	public static void addFactory(String packagePath, Class<? extends PointerFactory> clazz){
 		r.addFactory(packagePath, clazz);
-	}
-	
-	public static PythonObject asTuple(Collection<?> c){
-		PythonObject[] values = new PythonObject[c.size()];
-		int i=0;
-		for (Object o : c){
-			values[i++] = Coerce.toPython(o);
-		}
-		
-		TupleObject t = new TupleObject(values);
-		t.newObject();
-		return t;
 	}
 	
 	public static PythonObject executeFunction(String module, String function){

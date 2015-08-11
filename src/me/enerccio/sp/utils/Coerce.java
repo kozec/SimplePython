@@ -108,19 +108,38 @@ public class Coerce {
 		if (cls == Byte.class || cls == byte.class)
 			return NumberObject.valueOf(((Byte) o).byteValue());
 		if (cls == Integer.class || cls == int.class)
-			return NumberObject.valueOf(((Integer) o).longValue());
-		if (cls == Long.class || cls == long.class)
-			return NumberObject.valueOf(((Long) o).longValue());
-		if (cls == Float.class || cls == float.class)
-			return NumberObject.valueOf(((Float) o).floatValue());
-		if (cls == Double.class || cls == double.class)
-			return NumberObject.valueOf(((Double) o).doubleValue());
+			return NumberObject.valueOf(((Integer) o).intValue());
+		if (cls == Long.class || cls == long.class) {
+			if (PythonRuntime.USE_INT_ONLY)
+				return NumberObject.valueOf(((Long) o).intValue());
+			else
+				return NumberObject.valueOf(((Long) o).longValue());
+		}
+		if (cls == Float.class || cls == float.class) {
+			if (PythonRuntime.USE_DOUBLE_FLOAT)
+				return NumberObject.valueOf(((Float) o).doubleValue());
+			else	
+				return NumberObject.valueOf(((Float) o).floatValue());
+		}
+		if (cls == Double.class || cls == double.class) {
+			if (PythonRuntime.USE_DOUBLE_FLOAT)
+				return NumberObject.valueOf(((Double) o).doubleValue());
+			else
+				return NumberObject.valueOf(((Double) o).floatValue());
+		}
 		if (cls == String.class)
 			return new StringObject((String) o);
 		if (cls == Void.class)
 			return NoneObject.NONE;
 		if (cls == Boolean.class || cls == boolean.class)
 			return BoolObject.fromBoolean((Boolean) o);
+		if (cls.isArray()) {
+			ListObject lo = new ListObject();
+			lo.newObject();
+			for (Object i : (Object[])o)
+				lo.objects.add(i == null ? NoneObject.NONE : toPython(i, i.getClass()));
+			return lo;
+		}
 		if (o instanceof Collection){
 			ListObject lo = new ListObject();
 			lo.newObject();
@@ -146,13 +165,47 @@ public class Coerce {
 	}
 	
 	/** Coerces object to nearest applicable python type */
-	public static PythonObject toPython(Object o) {
-		return PythonRuntime.runtime.getJavaClass(o.getClass().getName(), o, null);
+	public static PythonObject toPython(int i) {
+		return NumberObject.valueOf(i);
+	}
+
+	/** Coerces object to nearest applicable python type */
+	public static PythonObject toPython(long l) {
+		return NumberObject.valueOf(l);
 	}
 	
 	/** Coerces object to nearest applicable python type */
-	public static PythonObject toPython(int i) {
-		return NumberObject.valueOf(i);
+	public static PythonObject toPython(String s) {
+		return new StringObject(s);
+	}
+	
+	/** Coerces object to nearest applicable python type */
+	public static PythonObject toPython(Object o) {
+		return PythonRuntime.runtime.getJavaClass(o.getClass().getCanonicalName(), o, null);
+	}
+
+	public static TupleObject toTuple(Collection<?> c){
+		PythonObject[] values = new PythonObject[c.size()];
+		int i=0;
+		for (Object o : c){
+			values[i++] = Coerce.toPython(o);
+		}
+		
+		TupleObject t = new TupleObject(values);
+		t.newObject();
+		return t;
+	}
+	
+	public static TupleObject toTuple(Object[] c){
+		PythonObject[] values = new PythonObject[c.length];
+		int i=0;
+		for (Object o : c){
+			values[i++] = Coerce.toPython(o);
+		}
+		
+		TupleObject t = new TupleObject(values);
+		t.newObject();
+		return t;
 	}
 	
 	static {
