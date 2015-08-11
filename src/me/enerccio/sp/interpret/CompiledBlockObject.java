@@ -228,6 +228,7 @@ public class CompiledBlockObject extends PythonObject {
 			case LOADGLOBAL:
 			case LOADBUILTIN:
 			case SAVE:
+			case MAKE_FUTURE:
 			case PUSH:
 			case SAVEGLOBAL:
 			case SAVE_LOCAL:
@@ -381,6 +382,7 @@ public class CompiledBlockObject extends PythonObject {
 			case PUSH:
 				w.writeInt(insertValue(b.value, mmap, rmap));
 				break;
+			case MAKE_FUTURE:
 			case KWARG:
 				String[] ss = (String[]) b.object;
 				w.writeInt(ss.length);
