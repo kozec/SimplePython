@@ -26,10 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import me.enerccio.sp.compiler.PythonBytecode.Call;
 import me.enerccio.sp.compiler.PythonBytecode.Pop;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.parser.pythonParser;
@@ -130,6 +126,8 @@ import me.enerccio.sp.utils.StaticTools;
 import me.enerccio.sp.utils.Utils;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -1331,6 +1329,9 @@ public class PythonCompiler {
 		compilingClass.push(null);
 		doCompileFunction(ctx, fncb, ctx.start, null);
 		compilingClass.pop();
+		
+		cb = addBytecode(fncb, Bytecode.RETURN, ctx.stop);
+		cb.intValue = 1;	
 		
 		fnc.block = new CompiledBlockObject(fncb);
 		Utils.putPublic(fnc, "function_defaults", new DictObject());
