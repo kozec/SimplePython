@@ -199,9 +199,7 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 
 	@Override
 	public PythonObject __iter__() {
-		PythonObject o = new OrderedSequenceIterator(this);
-		o.newObject();
-		return o;
+		return new OrderedSequenceIterator(this);
 	}
 	
 	@Override

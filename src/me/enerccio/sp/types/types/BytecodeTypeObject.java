@@ -205,7 +205,6 @@ public class BytecodeTypeObject extends TypeObject {
 				break;
 			}
 			
-			bytecode.newObject();
 			return bytecode;
 		} catch (CastFailedException e){
 			throw new TypeError("bytecode(): incorrect type of arguments");

@@ -53,16 +53,13 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		synchronized (cache){
 			Map<String, JavaCongruentAggregatorObject> mm = new HashMap<String, JavaCongruentAggregatorObject>();
 			
-			JavaMethodObject mmm;
 			for (Method m : cache.get(instance.getClass().getCanonicalName())){
 				String name = m.getName();
 				if (!mm.containsKey(name)){
 					JavaCongruentAggregatorObject co = new JavaCongruentAggregatorObject(name);
-					co.newObject();
 					mm.put(name, co);
 				}
-				mm.get(name).methods.add(mmm = new JavaMethodObject(instance, m));
-				mmm.newObject();
+				mm.get(name).methods.add(new JavaMethodObject(instance, m));
 			}
 			
 			for (String name : mm.keySet()){

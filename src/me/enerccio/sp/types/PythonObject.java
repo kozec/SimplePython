@@ -46,7 +46,7 @@ public abstract class PythonObject implements Serializable {
 	public static final String __NE__ = "__ne__";
 	
 	public PythonObject(){
-		
+		newObject();
 	}
 	
 	protected static Map<String, JavaMethodObject> sfields = new HashMap<String, JavaMethodObject>();
@@ -73,10 +73,10 @@ public abstract class PythonObject implements Serializable {
 	/**
 	 * Should be called only once to initialize methods of the object
 	 */
-	public void newObject(){
+	protected void newObject(){
 		registerObject();
 		if (getType() == null)
-			throw new NullPointerException("Type is NULL");
+			throw new NullPointerException("Type for " + this.getClass().getName() + " is NULL");
 		Utils.putPublic(this, __CLASS__, getType());
 	}
 

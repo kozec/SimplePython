@@ -19,10 +19,14 @@ package me.enerccio.sp.types.types;
 
 import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.interpret.KwArgs;
+import me.enerccio.sp.runtime.PythonRuntime;
+import me.enerccio.sp.types.AccessRestrictions;
+import me.enerccio.sp.types.AugumentedPythonObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.ClassObject;
+import me.enerccio.sp.types.sequences.StringObject;
 import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.utils.Utils;
 
@@ -33,6 +37,14 @@ import me.enerccio.sp.utils.Utils;
  */
 public abstract class TypeObject extends ClassObject {
 	private static final long serialVersionUID = 5891250487396458462L;
+	
+	@Override
+	public void newObject(){
+		if (PythonRuntime.STRING_TYPE != null) {
+			super.newObject();
+			this.fields.put("__name__", new AugumentedPythonObject(new StringObject(getTypeIdentificator()), AccessRestrictions.PUBLIC)); 
+		}
+	}
 	
 	public abstract String getTypeIdentificator();
 	

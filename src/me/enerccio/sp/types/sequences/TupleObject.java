@@ -156,9 +156,7 @@ public class TupleObject extends ImmutableSequenceObject  implements SimpleIDAcc
 
 	@Override
 	public PythonObject __iter__() {
-		PythonObject o = new OrderedSequenceIterator(this);
-		o.newObject();
-		return o;
+		return new OrderedSequenceIterator(this);
 	}
 
 	@Override
