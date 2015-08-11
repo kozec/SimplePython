@@ -62,22 +62,19 @@ public class EnvironmentObject extends PythonObject {
 	 * @param skipFirst whether to skip first closure (skip locals)
 	 * @return value or null if none exists
 	 */
-	public PythonObject get(StringObject key, boolean isGlobal, boolean skipFirst){
-		if (isGlobal){
-			return environments.get(environments.size()-1).doGet(key);
-		}
+	public PythonObject get(StringObject key, boolean isGlobal, boolean skipFirst) {
+		int it = skipFirst ? 1 : 0;
+		if (isGlobal)
+			it = environments.size() > 1 ? environments.size()-2 : 0;
 		
-		PythonObject o;
-		for (DictObject e : environments){
-			if (skipFirst){
-				skipFirst = false;
-				continue;
+			PythonObject o;
+			for (int i=it; i<environments.size(); i++){
+				DictObject e = environments.get(i);
+				o = e.doGet(key);
+				if (o != null)
+					return o;
 			}
-			o = e.doGet(key);
-			if (o != null)
-				return o;
-		}
-		return null;
+			return null;
 	}
 	
 	/**
