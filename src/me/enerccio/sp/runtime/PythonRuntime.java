@@ -361,7 +361,10 @@ public class PythonRuntime {
 	public static final String CLASSMETHOD = "classmethod";
 	public static final String CHR = "chr";
 	public static final String ORD = "ord";
+	public static final String DIR = "dir";
 	public static final String APPLY = "apply";
+	public static final String LOCALS = "locals";
+	public static final String GLOBALS = "globals";
 	
 	/** Some basic types */
 	public static final TypeObject TYPE_TYPE = new TypeTypeObject();
@@ -390,8 +393,6 @@ public class PythonRuntime {
 		BOOL_TYPE.newObject();
 	}
 	
-	public static final String DIR = "dir";
-
 	/**
 	 * Generates globals. This is only done once but then cloned
 	 * @return
@@ -429,6 +430,8 @@ public class PythonRuntime {
 					globals.put(CHR, Utils.staticMethodCall(PythonRuntime.class, CHR, int.class));
 					globals.put(ORD, Utils.staticMethodCall(PythonRuntime.class, ORD, StringObject.class));
 					globals.put(DIR, Utils.staticMethodCall(PythonRuntime.class, DIR, PythonObject.class));
+					globals.put(LOCALS, Utils.staticMethodCall(PythonRuntime.class, LOCALS));
+					globals.put(GLOBALS, Utils.staticMethodCall(PythonRuntime.class, GLOBALS));
 					globals.put(TypeTypeObject.TYPE_CALL, TYPE_TYPE);
 					globals.put(NoneTypeObject.NONE_TYPE_CALL, NONE_TYPE);
 					globals.put(StringTypeObject.STRING_CALL, STRING_TYPE);
@@ -504,6 +507,14 @@ public class PythonRuntime {
 			}
 		
 		return globals;
+	}
+	
+	protected static PythonObject locals(){
+		return PythonInterpreter.interpreter.get().environment().getLocals();
+	}
+	
+	protected static PythonObject globals(){
+		return PythonInterpreter.interpreter.get().environment().getGlobals();
 	}
 	
 	protected static List<String> dir(PythonObject o){
