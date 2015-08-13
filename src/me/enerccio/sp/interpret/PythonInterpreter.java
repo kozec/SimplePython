@@ -226,7 +226,7 @@ public class PythonInterpreter extends PythonObject {
 		FrameObject n;
 		currentFrame.add(n = new FrameObject());
 		n.compiled = frame;
-		n.dataStream = ByteBuffer.wrap(frame.getBytedata());
+		n.dataStream = frame.getBytedataAsNativeBuffer();
 		
 //		System.out.println(CompiledBlockObject.dis(frame));
 	}
