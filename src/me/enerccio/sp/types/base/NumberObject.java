@@ -23,6 +23,7 @@ import java.util.Set;
 
 import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.errors.TypeError;
+import me.enerccio.sp.interpret.InterpreterMathExecutorHelper.*;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
@@ -34,7 +35,10 @@ import me.enerccio.sp.utils.Utils;
  * @author Enerccio
  *
  */
-public abstract class NumberObject extends PythonObject {
+public abstract class NumberObject extends PythonObject 
+	implements HasAddMethod, HasAndMethod, HasDivMethod, HasEqMethod, HasNeMethod, HasGeMethod, HasGtMethod, HasLeMethod, HasLshiftMethod, HasLtMethod,
+			   HasModMethod, HasMulMethod, HasOrMethod, HasPowMethod, HasRshiftMethod, HasSubMethod, HasXorMethod
+			{
 	private static final long serialVersionUID = 8168239961379175666L;
 	public enum NumberType {
 		BOOL, INT, LONG, FLOAT, COMPLEX, 
@@ -141,8 +145,8 @@ public abstract class NumberObject extends PythonObject {
 	static {
 		try {
 			sfields.putAll(PythonObject.getSFields());
-			sfields.put(__RSHIFT__, new JavaMethodObject(NumberObject.class, "rs", PythonObject.class));
-			sfields.put(__LSHIFT__, new JavaMethodObject(NumberObject.class, "ls", PythonObject.class));
+			sfields.put(__RSHIFT__, new JavaMethodObject(NumberObject.class, "rshift", PythonObject.class));
+			sfields.put(__LSHIFT__, new JavaMethodObject(NumberObject.class, "lshift", PythonObject.class));
 			sfields.put(__ADD__, new JavaMethodObject(NumberObject.class, "add", PythonObject.class));
 			sfields.put(__SUB__, new JavaMethodObject(NumberObject.class, "sub", PythonObject.class));
 			sfields.put(__MUL__, new JavaMethodObject(NumberObject.class, "mul", PythonObject.class));
@@ -246,11 +250,11 @@ public abstract class NumberObject extends PythonObject {
 		return invalidOperation("** or pow()", b);
 	}
 	
-	public PythonObject ls(PythonObject b){
+	public PythonObject lshift(PythonObject b){
 		return invalidOperation("<<", b);
 	}
 	
-	public PythonObject rs(PythonObject b){
+	public PythonObject rshift(PythonObject b){
 		return invalidOperation(">>", b);
 	}
 	
@@ -538,7 +542,7 @@ public abstract class NumberObject extends PythonObject {
 		}
 		
 		@Override
-		public PythonObject ls(PythonObject b){
+		public PythonObject lshift(PythonObject b){
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -563,7 +567,7 @@ public abstract class NumberObject extends PythonObject {
 		}
 		
 		@Override
-		public PythonObject rs(PythonObject b){
+		public PythonObject rshift(PythonObject b){
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -901,7 +905,7 @@ public abstract class NumberObject extends PythonObject {
 		}
 		
 		@Override
-		public PythonObject ls(PythonObject b){
+		public PythonObject lshift(PythonObject b){
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -918,7 +922,7 @@ public abstract class NumberObject extends PythonObject {
 		}
 		
 		@Override
-		public PythonObject rs(PythonObject b){
+		public PythonObject rshift(PythonObject b){
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {

@@ -256,6 +256,23 @@ public class CompiledBlockObject extends PythonObject {
 			case OPEN_LOCALS:
 			case RESOLVE_CLOSURE:
 			case UNPACK_KWARG:
+			case ADD:
+			case AND:
+			case DIV:
+			case EQ:
+			case GE:
+			case GT:
+			case LE:
+			case LSHIFT:
+			case LT:
+			case MOD:
+			case MUL:
+			case NE:
+			case OR:
+			case POW:
+			case RSHIFT:
+			case SUB:
+			case XOR:
 				bd.append(String.format(FORMAT, ""));
 				break;
 			default:
@@ -450,6 +467,40 @@ public class CompiledBlockObject extends PythonObject {
 				break;
 			case UNPACK_SEQUENCE:
 				w.writeInt(b.intValue);
+				break;
+			case ADD:
+				break;
+			case AND:
+				break;
+			case DIV:
+				break;
+			case EQ:
+				break;
+			case GE:
+				break;
+			case GT:
+				break;
+			case LE:
+				break;
+			case LSHIFT:
+				break;
+			case LT:
+				break;
+			case MOD:
+				break;
+			case MUL:
+				break;
+			case NE:
+				break;
+			case OR:
+				break;
+			case POW:
+				break;
+			case RSHIFT:
+				break;
+			case SUB:
+				break;
+			case XOR:
 				break;
 			}
 			
