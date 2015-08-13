@@ -174,7 +174,7 @@ public class StringObject extends ImmutableSequenceObject implements SimpleIDAcc
 	public PythonObject mod(PythonObject b) {
 		throw new TypeError("string format not yet supported"); // :(
 	}
-
+	
 	public PythonObject add(PythonObject b) {
 		if (b instanceof NumberObject)
 			return new StringObject(value + b.toString());

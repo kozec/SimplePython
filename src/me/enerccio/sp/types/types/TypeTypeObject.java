@@ -18,14 +18,13 @@
 package me.enerccio.sp.types.types;
 
 import me.enerccio.sp.errors.TypeError;
+import me.enerccio.sp.interpret.InternalDict;
 import me.enerccio.sp.interpret.KwArgs;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.callables.BoundHandleObject;
 import me.enerccio.sp.types.callables.ClassObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
-import me.enerccio.sp.types.mappings.DictObject;
-import me.enerccio.sp.types.mappings.PythonProxy;
 import me.enerccio.sp.types.sequences.StringObject;
 import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.utils.Utils;
@@ -62,26 +61,26 @@ public class TypeTypeObject extends TypeObject {
 			throw new TypeError("type(): name must be a string");
 		if (!(bases instanceof TupleObject))
 			throw new TypeError("type(): bases must be a tuple");
-		if (!(dict instanceof DictObject))
+		if (!(dict instanceof InternalDict))
 			throw new TypeError("type(): dict must be a dict");
 
 		ClassObject type = new ClassObject();
-		type.newObject();
+		type.newObject(); // TODO
 		Utils.putPublic(type, ClassObject.__NAME__, name);
 		Utils.putPublic(type, ClassObject.__BASES__, bases);
 		Utils.putPublic(type, ClassObject.__DICT__, dict);
 		
 		synchronized (dict){
-			DictObject d = (DictObject)dict;
-			synchronized (d.backingMap){
-				for (PythonProxy key : d.backingMap.keySet()){
-					PythonObject o = d.backingMap.get(key);
+			InternalDict d = (InternalDict)dict;
+			synchronized (d){
+				for (String key : d.keySet()){
+					PythonObject o = d.getVariable(key);
 					if (o instanceof UserFunctionObject){
 						BoundHandleObject bh = new BoundHandleObject();
 						bh.newObject();
 						Utils.putPublic(bh, BoundHandleObject.ACCESSOR, type);
 						Utils.putPublic(bh, BoundHandleObject.FUNC, o);
-						d.backingMap.put(key, bh);
+						d.putVariable(key, bh);
 					}
 				}
 			}

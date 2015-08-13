@@ -41,6 +41,7 @@ import me.enerccio.sp.errors.ValueError;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.interpret.EnvironmentObject;
 import me.enerccio.sp.interpret.ExecutionResult;
+import me.enerccio.sp.interpret.InternalDict;
 import me.enerccio.sp.interpret.InternalJavaPathResolver;
 import me.enerccio.sp.interpret.KwArgs;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
@@ -63,7 +64,7 @@ import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.callables.UserMethodObject;
 import me.enerccio.sp.types.mappings.DictObject;
-import me.enerccio.sp.types.mappings.PythonProxy;
+import me.enerccio.sp.types.mappings.StringDictObject;
 import me.enerccio.sp.types.pointer.PointerFactory;
 import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.pointer.PointerObject;
@@ -269,7 +270,7 @@ public class PythonRuntime {
 	 * @param moduleResolvePath
 	 * @return
 	 */
-	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, DictObject injectGlobals){
+	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, StringDictObject injectGlobals){
 		if (moduleResolvePath == null)
 			moduleResolvePath = new StringObject("", true);
 		
@@ -359,7 +360,7 @@ public class PythonRuntime {
 	}
 
 	/** stored globals are here */
-	private static volatile DictObject globals = null;
+	private static volatile StringDictObject globals = null;
 	public static final String IS = "is";
 	public static final String MRO = "mro";
 	public static final String GETATTR = "getattr";
@@ -417,12 +418,12 @@ public class PythonRuntime {
 	 * Generates globals. This is only done once but then cloned
 	 * @return
 	 */
-	public DictObject getGlobals() {
+	public StringDictObject getGlobals() {
 		if (globals == null)
 			synchronized (this){
 				if (globals == null){
 					buildingGlobals.set(true);
-					globals = new DictObject();
+					globals = new StringDictObject();
 					buildingGlobals.set(false);
 					
 					EnvironmentObject e = new EnvironmentObject();
@@ -528,11 +529,11 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject locals(){
-		return PythonInterpreter.interpreter.get().environment().getLocals();
+		return (PythonObject) PythonInterpreter.interpreter.get().environment().getLocals();
 	}
 	
 	protected static PythonObject globals(){
-		return PythonInterpreter.interpreter.get().environment().getGlobals();
+		return (PythonObject) PythonInterpreter.interpreter.get().environment().getGlobals();
 	}
 	
 	protected static List<String> dir(PythonObject o){
@@ -545,20 +546,18 @@ public class PythonRuntime {
 				
 				if (o.fields.containsKey("__dict__")){
 					PythonObject dd = o.fields.get("__dict__").object;
-					if (dd instanceof DictObject){
+					if (dd instanceof InternalDict){
 						synchronized (dd){
-							DictObject d = (DictObject)dd;
-							synchronized (d.backingMap){
-								for (PythonProxy pp : d.backingMap.keySet()){
-									if (pp.o instanceof StringObject)
-										fields.add(((StringObject)pp.o).value);
+							InternalDict d = (InternalDict)dd;
+							synchronized (d){
+								for (String pp : d.keySet())
+									fields.add(pp);
 								}
 							}
 						}
 					}
 				}
 			}
-		}
 		
 		if (o.get("__dir__", null) != null){
 			PythonObject dirCall = PythonInterpreter.interpreter.get().execute(true, o.get("__dir__", null), null);
@@ -726,7 +725,7 @@ public class PythonRuntime {
 			return (ClassObject)Utils.getGlobal(SliceTypeObject.SLICE_CALL);
 		if (py instanceof TupleObject)
 			return PythonRuntime.TUPLE_TYPE;
-		if (py instanceof DictObject)
+		if (py instanceof DictObject || py instanceof StringDictObject)
 			return PythonRuntime.DICT_TYPE;
 		if (py instanceof StringObject)
 			return PythonRuntime.STRING_TYPE;
@@ -784,7 +783,7 @@ public class PythonRuntime {
 		return o.delete(attribute, PythonInterpreter.interpreter.get().getLocalContext());
 	}
 	
-	private void addExceptions(DictObject globals) {
+	private void addExceptions(InternalDict globals) {
 		DictObject base = addException(globals, "Error", null, false);
 		ListObject lo = new ListObject();
 		lo.newObject();
@@ -816,15 +815,11 @@ public class PythonRuntime {
 		addException(globals, "TypeError", "StandardError", false);
 		addException(globals, "ValueError", "StandardError", false);
 		addException(globals, "GeneratorExit", "Exception", false);
-		ERROR			= (ClassObject)globals.getItem("Error");
-		STOP_ITERATION	= (ClassObject)globals.getItem("StopIteration");
-		GENERATOR_EXIT	= (ClassObject)globals.getItem("GeneratorExit");
-		INDEX_ERROR		= (ClassObject)globals.getItem("IndexError");
 	}
 
 
-	private DictObject addException(DictObject globals, String exceptionName, String exceptionBase, boolean stringArg) {
-		TypeTypeObject classCreator = (TypeTypeObject) globals.doGet(TypeTypeObject.TYPE_CALL);
+	private DictObject addException(InternalDict globals, String exceptionName, String exceptionBase, boolean stringArg) {
+		TypeTypeObject classCreator = (TypeTypeObject) globals.getVariable(TypeTypeObject.TYPE_CALL);
 		DictObject dict = new DictObject();
 		
 		JavaFunctionObject init = (JavaFunctionObject) Utils.staticMethodCall(true, PythonRuntime.class, "initException", TupleObject.class, KwArgs.class);
@@ -833,8 +828,8 @@ public class PythonRuntime {
 		dict.backingMap.put(new StringObject("__init__"), init);
 		
 		TupleObject t1, t2;
-		globals.put(exceptionName, classCreator.call(t1 = new TupleObject(new StringObject(exceptionName), t2 = (exceptionBase == null ? new TupleObject() :
-				new TupleObject(globals.doGet(exceptionBase))), dict), null));
+		globals.putVariable(exceptionName, classCreator.call(t1 = new TupleObject(new StringObject(exceptionName), t2 = (exceptionBase == null ? new TupleObject() :
+				new TupleObject(globals.getVariable(exceptionBase))), dict), null));
 		t1.newObject();
 		t2.newObject();
 		return dict;

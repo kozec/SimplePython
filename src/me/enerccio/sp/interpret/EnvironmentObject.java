@@ -26,9 +26,8 @@ import java.util.Set;
 
 import me.enerccio.sp.errors.NameError;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
-import me.enerccio.sp.types.mappings.DictObject;
-import me.enerccio.sp.types.sequences.StringObject;
 
 /**
  * Environment object represents environment. Environment is responsible for fetching variable values
@@ -37,7 +36,7 @@ import me.enerccio.sp.types.sequences.StringObject;
  */
 public class EnvironmentObject extends PythonObject {
 	private static final long serialVersionUID = -4678903433798210010L;
-	private List<DictObject> environments = new ArrayList<DictObject>();
+	private List<InternalDict> environments = new ArrayList<InternalDict>();
 	
 	public EnvironmentObject(){
 		super(true);
@@ -47,7 +46,7 @@ public class EnvironmentObject extends PythonObject {
 	 * Adds closure maps to the environment
 	 * @param closures
 	 */
-	public void add(DictObject... closures){
+	public void add(InternalDict... closures){
 		environments.addAll(Arrays.asList(closures));
 	}
 	
@@ -55,7 +54,7 @@ public class EnvironmentObject extends PythonObject {
 	 * Adds closure maps to the environment
 	 * @param closures
 	 */
-	public void add(Collection<DictObject> closures){
+	public void add(Collection<InternalDict> closures){
 		environments.addAll(closures);
 	}
 	
@@ -66,19 +65,19 @@ public class EnvironmentObject extends PythonObject {
 	 * @param skipFirst whether to skip first closure (skip locals)
 	 * @return value or null if none exists
 	 */
-	public PythonObject get(StringObject key, boolean isGlobal, boolean skipFirst) {
+	public PythonObject get(String key, boolean isGlobal, boolean skipFirst){
 		int it = skipFirst ? 1 : 0;
 		if (isGlobal)
 			it = environments.size() > 1 ? environments.size()-2 : 0;
 		
-			PythonObject o;
-			for (int i=it; i<environments.size(); i++){
-				DictObject e = environments.get(i);
-				o = e.doGet(key);
-				if (o != null)
-					return o;
-			}
-			return null;
+		PythonObject o;
+		for (int i=it; i<environments.size(); i++){
+			InternalDict e = environments.get(i);
+			o = e.getVariable(key);
+			if (o != null)
+				return o;
+		}
+		return null;
 	}
 	
 	/**
@@ -90,24 +89,26 @@ public class EnvironmentObject extends PythonObject {
 	 * @return value or null if none exists
 	 * @return
 	 */
-	public PythonObject set(StringObject key, PythonObject value, boolean isGlobal, boolean skipFirst){
+	public PythonObject set(String key, PythonObject value, boolean isGlobal, boolean skipFirst){
 		if (isGlobal){
-			return environments.get(environments.size()-1).backingMap.put(key, value);
+			environments.get(environments.size()-1).putVariable(key, value);
 		}
 		
 		PythonObject o;
-		for (DictObject e : environments){
+		for (InternalDict e : environments){
 			if (skipFirst){
 				skipFirst = false;
 				continue;
 			}
-			o = e.doGet(key);
+			o = e.getVariable(key);
 			if (o != null){
-				return e.backingMap.put(key, value);
+				e.putVariable(key, value);
+				return NoneObject.NONE;
 			}
 		}
 		
-		return environments.get(0).backingMap.put(key, value);
+		environments.get(0).putVariable(key, value);
+		return NoneObject.NONE;
 	}
 
 	@Override
@@ -122,10 +123,10 @@ public class EnvironmentObject extends PythonObject {
 		sb.append(Integer.toHexString(hashCode()));
 		sb.append("\n");
 		int pad = 2;
-		for (DictObject e : environments){
+		for (InternalDict e : environments){
 			for (int i=0; i<pad; i++)
 				sb.append(" ");
-			for (String k : e.keys()) {
+			for (String k : e.keySet()) {
 				sb.append(k);
 				sb.append(" ");
 			}
@@ -140,35 +141,35 @@ public class EnvironmentObject extends PythonObject {
 	 * Returns locals in this environment
 	 * @return
 	 */
-	public DictObject getLocals() {
+	public InternalDict getLocals() {
 		return environments.get(0);
 	}
 	
-	public void pushLocals(DictObject locals){
+	public void pushLocals(InternalDict locals){
 		environments.add(0, locals);
 	}
 	
 	public PythonObject getBuiltin(String key){
-		return environments.get(environments.size()-1).doGet(key);
+		return environments.get(environments.size()-1).getVariable(key);
 	}
 
-	public List<DictObject> toClosure() {
-		return new ArrayList<DictObject>(environments);
+	public List<InternalDict> toClosure() {
+		return new ArrayList<InternalDict>(environments);
 	}
 
-	public void delete(StringObject vname, boolean isGlobal) {
+	public void delete(String vname, boolean isGlobal) {
 		if (environments.size() == 1){
 			delete(vname, false);
 			return;
 		} else {
 			if (isGlobal) {
-				if (environments.get(0).backingMap.containsKey(vname)){
-					environments.get(environments.size()-2).backingMap.remove(vname);
+				if (environments.get(0).containsVariable(vname)){
+					environments.get(environments.size()-2).remove(vname);
 					return;
 				}
 			} else {
-				if (environments.get(0).backingMap.containsKey(vname)){
-					environments.get(0).backingMap.remove(vname);
+				if (environments.get(0).containsVariable(vname)){
+					environments.get(0).remove(vname);
 					return;
 				} 
 			}
@@ -176,7 +177,7 @@ public class EnvironmentObject extends PythonObject {
 		throw new NameError("name '" + vname.toString() + "' is not defined");
 	}
 
-	public DictObject getGlobals() {
+	public InternalDict getGlobals() {
 		if (environments.size() == 1)
 			return environments.get(0);
 		else

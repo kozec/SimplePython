@@ -33,7 +33,7 @@ import me.enerccio.sp.runtime.ModuleProvider;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
-import me.enerccio.sp.types.mappings.DictObject;
+import me.enerccio.sp.types.mappings.StringDictObject;
 import me.enerccio.sp.types.sequences.StringObject;
 import me.enerccio.sp.utils.StaticTools.ParserGenerator;
 import me.enerccio.sp.utils.Utils;
@@ -49,8 +49,8 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 	public static final String __DICT__ = "__dict__";
 	public static final String __THISMODULE__ = "__thismodule__";
 	public static final String __INJECTED__ = "__injected__";
-	private DictObject globals;
-	private DictObject injectedGlobals = null;
+	private StringDictObject globals;
+	private StringDictObject injectedGlobals = null;
 
 	public ModuleObject(ModuleProvider provider) {
 		super(false);
@@ -98,13 +98,13 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 	
 	public void injectGlobal(String key, PythonObject value) {
 		if (injectedGlobals == null) {
-			injectedGlobals = new DictObject();
+			injectedGlobals = new StringDictObject();
 			injectedGlobals.newObject();
 		}
 		injectedGlobals.put(key, value);
 	}
 	
-	public void setInjectGlobals(DictObject g) {
+	public void setInjectGlobals(StringDictObject g) {
 		this.injectedGlobals = g;
 	}
 	
@@ -159,7 +159,7 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 		
 		FrameObject newFrame = PythonInterpreter.interpreter.get().currentFrame.getLast();
 		
-		DictObject args = new DictObject();
+		StringDictObject args = new StringDictObject();
 		args.put(__THISMODULE__, this);
 		args.put(__NAME__, new StringObject(provider.getModuleName()));
 		if (injectedGlobals != null) {
@@ -171,7 +171,7 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 		
 		PythonInterpreter.interpreter.get().executeAll(cfc);
 		
-		globals = newFrame.environment.getLocals();
+		globals = (StringDictObject) newFrame.environment.getLocals();
 		Utils.putPublic(this, __DICT__, globals);
 	}
 

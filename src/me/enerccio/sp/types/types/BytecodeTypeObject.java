@@ -28,7 +28,6 @@ import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.sequences.TupleObject;
 import me.enerccio.sp.utils.CastFailedException;
 import me.enerccio.sp.utils.Coerce;
-import me.enerccio.sp.utils.Utils;
 
 
 /**
