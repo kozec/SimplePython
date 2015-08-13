@@ -1,3 +1,4 @@
+
 def eval_A(i, j):
     ij = i+j
     return 1.0 / (ij * (ij + 1) / 2 + i + 1)
@@ -48,6 +49,4 @@ def main():
     print("%0.9f" % (sqrt(vBv/vv)))
         
 def test():
-    # main()
-    print zip(["a", "b", "c"])
-    print zip(["a", "b", "c"], [1, 2, 3])
+    main()

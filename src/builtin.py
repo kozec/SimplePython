@@ -170,6 +170,8 @@ class set(object):
         del self.__inner_map[key]
    
 def range(arg1, arg2=None, arg3=1):
+    if arg2 is None:
+        return xrange(arg1)
     return list(xrange(arg1, arg2, arg3))
 
 class super(object):
@@ -216,3 +218,9 @@ def zip(*iterables):
             except StopIteration:
                 return result
         result.append(tuple(d))
+        
+def sum(iterable):
+    it = 0
+    for x in iterable:
+        it += x
+    return it
