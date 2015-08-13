@@ -72,6 +72,28 @@ public class PythonBytecode extends PythonObject {
 		}
 	}
 	
+	public static class TestFuture extends PythonBytecode {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 4386928389191660149L;
+
+		{
+			bytecode = Bytecode.TEST_FUTURE;
+		}
+	}
+	
+	public static class BinaryOperator extends PythonBytecode {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 438692838991066014L;
+
+		public BinaryOperator(Bytecode b){
+			bytecode = b;
+		}
+	}
+	
 	public static class Del extends PythonBytecode {
 		/**
 		 * 
