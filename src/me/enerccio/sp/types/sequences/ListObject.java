@@ -49,16 +49,18 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 	public List<PythonObject> objects = Collections.synchronizedList(new ArrayList<PythonObject>());
 	
 	public ListObject(){
-		
+		super(false);
 	}
 	
 	public ListObject(SequenceObject o) {
+		super(false);
 		for (int i = 0; i<o.len(); i++)
 			append(o.get(NumberObject.valueOf(i)));
 	}
 	
 	/** If passed object is iterable or has __GETITEM__ defined, creates list filled with objects in this list */ 
 	public ListObject(PythonObject o) {
+		super(false);
 		PythonObject iter = o.get(__ITER__, null);
 		try {
 			PythonObject iterator;

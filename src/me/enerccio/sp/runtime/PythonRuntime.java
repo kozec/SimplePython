@@ -271,7 +271,7 @@ public class PythonRuntime {
 	 */
 	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, DictObject injectGlobals){
 		if (moduleResolvePath == null)
-			moduleResolvePath = new StringObject("");
+			moduleResolvePath = new StringObject("", true);
 		
 		String modulePath = moduleResolvePath.value;
 		if (modulePath.equals("")){
@@ -579,7 +579,7 @@ public class PythonRuntime {
 	
 	protected static PythonObject apply(PythonObject callable, ListObject args){
 		int cfc = PythonInterpreter.interpreter.get().currentFrame.size();
-		TupleObject a = (TupleObject) Utils.list2tuple(args.objects);
+		TupleObject a = (TupleObject) Utils.list2tuple(args.objects, true);
 		PythonInterpreter.interpreter.get().execute(false, callable, null, a.getObjects());
 		return PythonInterpreter.interpreter.get().executeAll(cfc);
 	}
@@ -612,8 +612,7 @@ public class PythonRuntime {
 	protected static PythonObject mro(ClassObject clazz){
 		List<ClassObject> ll = DiamondResolver.resolveDiamonds(clazz);
 		Collections.reverse(ll);
-		TupleObject to = (TupleObject) Utils.list2tuple(ll);
-		to.newObject();
+		TupleObject to = (TupleObject) Utils.list2tuple(ll, false);
 		return to;
 	}
 	

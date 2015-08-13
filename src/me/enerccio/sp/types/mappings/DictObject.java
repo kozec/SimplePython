@@ -46,11 +46,16 @@ public class DictObject extends ContainerObject {
 	public static final String __SETITEM__ = "__setitem__";
 	public static final String __LEN__ = "__len__";
 	
+	public DictObject(boolean internalUse){
+		super(internalUse);
+	}
+	
 	public DictObject(){
-		newObject();
+		super(false);
 	}
 	
 	public DictObject(Map<Integer, PythonObject> mmap) {
+		super(false);
 		newObject();
 		for (Integer k : mmap.keySet())
 			backingMap.put(NumberObject.valueOf(k), mmap.get(k));
@@ -106,7 +111,7 @@ public class DictObject extends ContainerObject {
 	// Internal use only
 	public boolean contains(String key) {
 		synchronized (backingMap){
-			return backingMap.containsKey(new StringObject(key));
+			return backingMap.containsKey(new StringObject(key, true));
 		}
 	}
 
@@ -116,8 +121,8 @@ public class DictObject extends ContainerObject {
 		}
 	}
 	
-	public PythonObject getItem(String key) {
-		StringObject so = new StringObject(key);
+	public synchronized PythonObject getItem(String key) {
+		StringObject so = new StringObject(key, true);
 		synchronized (backingMap){
 			if (!backingMap.containsKey(so))
 				return null;
@@ -155,8 +160,8 @@ public class DictObject extends ContainerObject {
 		}
 	}
 
-	public PythonObject doGet(String str) {
-		return doGet(new StringObject(str));
+	public synchronized PythonObject doGet(String str) {
+		return doGet(new StringObject(str, true));
 	}
 
 	public PythonObject doGet(PythonObject key) {

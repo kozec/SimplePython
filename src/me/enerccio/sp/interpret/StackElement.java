@@ -18,13 +18,25 @@ public class StackElement extends PythonObject {
 	public final int character;
 	public final String function;
 
+	@Override
+	public Set<String> getGenHandleNames() {
+		return PythonObject.sfields.keySet();
+	}
+	
+	@Override
+	protected Map<String, JavaMethodObject> getGenHandles() {
+		return PythonObject.sfields;
+	}
+	
 	private StackElement() {
+		super(false);
 		line = character = -1;
 		module = null;
 		function = "<module>";
 	}
 
 	public StackElement(ModuleInfo module, String function, int line, int character) {
+		super(false);
 		this.module = module;
 		this.line = line;
 		this.character = character;
@@ -39,15 +51,5 @@ public class StackElement extends PythonObject {
 	@Override
 	protected String doToString() {
 		return "<" + module.getName() + " at line " + line + " " + character + ">"; 
-	}
-
-	@Override
-	public Set<String> getGenHandleNames() {
-		return PythonObject.sfields.keySet();
-	}
-
-	@Override
-	protected Map<String, JavaMethodObject> getGenHandles() {
-		return PythonObject.sfields;
 	}
 }
