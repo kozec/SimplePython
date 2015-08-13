@@ -137,7 +137,6 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 	public PythonObject add(PythonObject b) {
 		if (b instanceof ListObject) {
 			ListObject l = new ListObject();
-			l.newObject();
 			for (PythonObject o : objects)
 				l.objects.add(o);
 			for (PythonObject o : ((ListObject)b).objects)
@@ -173,7 +172,6 @@ public class ListObject extends MutableSequenceObject implements SimpleIDAccesso
 	public PythonObject get(PythonObject key) {
 		if (key instanceof SliceObject){
 			ListObject lo = new ListObject();
-			lo.newObject();
 			
 			int[] slicedata = getSliceData(objects.size(), key);
 			int sav = slicedata[0];

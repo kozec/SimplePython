@@ -65,7 +65,6 @@ public class TypeTypeObject extends TypeObject {
 			throw new TypeError("type(): dict must be a dict");
 
 		ClassObject type = new ClassObject();
-		type.newObject(); // TODO
 		Utils.putPublic(type, ClassObject.__NAME__, name);
 		Utils.putPublic(type, ClassObject.__BASES__, bases);
 		Utils.putPublic(type, ClassObject.__DICT__, dict);
@@ -77,7 +76,6 @@ public class TypeTypeObject extends TypeObject {
 					PythonObject o = d.getVariable(key);
 					if (o instanceof UserFunctionObject){
 						BoundHandleObject bh = new BoundHandleObject();
-						bh.newObject();
 						Utils.putPublic(bh, BoundHandleObject.ACCESSOR, type);
 						Utils.putPublic(bh, BoundHandleObject.FUNC, o);
 						d.putVariable(key, bh);
