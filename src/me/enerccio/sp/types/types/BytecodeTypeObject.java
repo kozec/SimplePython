@@ -79,6 +79,9 @@ public class BytecodeTypeObject extends TypeObject {
 			case ACCEPT_ITER:
 				bytecode.intValue = Coerce.toJava(args.get(1), int.class);
 				break;
+			case MAKE_FIRST:
+				bytecode.intValue = Coerce.toJava(args.get(1), int.class);
+				break;
 			case CALL:
 				bytecode.intValue = Coerce.toJava(args.get(1), int.class);
 				break;
@@ -154,6 +157,7 @@ public class BytecodeTypeObject extends TypeObject {
 				break;
 			case PUSH_FRAME:
 				bytecode.intValue = Coerce.toJava(args.get(1), int.class);
+				bytecode.object = Coerce.toJava(args.get(2), int.class);
 				break;
 			case PUSH_LOCALS:
 				break;
