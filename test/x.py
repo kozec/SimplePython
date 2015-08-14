@@ -12,6 +12,11 @@ class X(object):
         
 def test():
     x = X()
-    with x as y:
-        print y
-    print "a"
+    for a in (0, 1):
+        try:
+            with x as y:
+                print y
+                break
+        finally:
+            print "b"
+        print "a"

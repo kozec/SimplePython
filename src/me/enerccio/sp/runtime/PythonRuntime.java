@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.errors.AttributeError;
-import me.enerccio.sp.errors.BasePythonError;
 import me.enerccio.sp.errors.ImportError;
 import me.enerccio.sp.errors.PythonException;
 import me.enerccio.sp.errors.TypeError;
@@ -995,7 +994,7 @@ public class PythonRuntime {
 			} catch (InvocationTargetException e){
 				if (e.getTargetException() instanceof PythonExecutionException)
 					throw (RuntimeException)e.getTargetException();
-				if (e.getTargetException() instanceof BasePythonError)
+				if (e.getTargetException() instanceof PythonException)
 					throw Utils.throwException(((PythonException)e.getTargetException()).type, ((PythonException)e.getTargetException()).message, e.getTargetException());
 				throw new TypeError("javainstance(): failed java constructor call");
 			} catch (Exception e) {

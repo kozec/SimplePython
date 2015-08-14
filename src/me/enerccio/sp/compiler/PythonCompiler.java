@@ -332,13 +332,51 @@ public class PythonCompiler {
 			compileWithProtocol(i+1, items, items.get(i), suite, bytecode, cs);
 		}
 	}
+	
+	private class WithControllStackItem implements ControllStackItem {
+		
+		@Override
+		public void outputContinue(Continue_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
+			cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, ctx.start);
+			cb.stringValue = "LoopContinue";
+			cb = addBytecode(bytecode, Bytecode.CALL, ctx.start);
+			cb.intValue = 0;
+			addBytecode(bytecode, Bytecode.RAISE, ctx.start);
+		}
+
+		
+		@Override
+		public void outputBreak(Break_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
+			cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, ctx.start);
+			cb.stringValue = "LoopBreak";
+			cb = addBytecode(bytecode, Bytecode.CALL, ctx.start);
+			cb.intValue = 0;
+			addBytecode(bytecode, Bytecode.RAISE, ctx.start);
+		}
+
+		@Override
+		public void outputFinallyBreakBlock(Try_stmtContext ctx,
+				List<PythonBytecode> bytecode, ControllStack cs) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void outputFinallyContinueBlock(Try_stmtContext ctx,
+				List<PythonBytecode> bytecode, ControllStack cs) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 
 	private void compileWithProtocol(int i, List<With_itemContext> items,
 			With_itemContext wi, SuiteContext suite, List<PythonBytecode> bytecode,
 			ControllStack cs) {
+		WithControllStackItem withCSI = new WithControllStackItem();
+		cs = ControllStack.push(cs, withCSI);
 		PythonBytecode makeFrame = Bytecode.makeBytecode(Bytecode.PUSH_FRAME, wi.start, getFunction(), module);
 		PythonBytecode excTestJump = Bytecode.makeBytecode(Bytecode.GOTO, wi.start, getFunction(), module);
-		
 		
 		compileWithEntryProtocol(wi, bytecode, cs);
 		bytecode.add(makeFrame);
@@ -390,6 +428,62 @@ public class PythonCompiler {
 		cb.value = NoneObject.NONE;
 		exceptionNotSuppressed.intValue = bytecode.size();
 		// raises if exception is on top of the stack, or not if None
+		
+		// test for LoopBreak and LoopContinue if in loop
+		cs.pop();
+		ControllStackItem it = cs.peek();
+		if (it != null){
+			cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, wi.stop);
+			cb.stringValue = "LoopContinue"; 
+			addBytecode(bytecode, Bytecode.ISINSTANCE, wi.stop);
+			PythonBytecode skipOver1 = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, wi.stop, getFunction(), module);
+			bytecode.add(skipOver1);
+			
+			if (it instanceof TryFinallyItem || it instanceof WithControllStackItem){
+				addBytecode(bytecode, Bytecode.SWAP_STACK, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);	// frame
+				addBytecode(bytecode, Bytecode.SWAP_STACK, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);	// return code (should be None)
+				addBytecode(bytecode, Bytecode.RERAISE, wi.stop);
+				if (it instanceof TryFinallyItem){
+					((TryFinallyItem)it).needsContinueBlock = true;
+				}
+			} else {
+				addBytecode(bytecode, Bytecode.POP, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);
+				cb = addBytecode(bytecode, Bytecode.GOTO, wi.stop);
+				cb.intValue = ((LoopStackItem)it).start;
+			}
+			
+			skipOver1.intValue = bytecode.size();
+			
+			cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, wi.stop);
+			cb.stringValue = "LoopBreak"; 
+			addBytecode(bytecode, Bytecode.ISINSTANCE, wi.stop);
+			PythonBytecode skipOver2 = Bytecode.makeBytecode(Bytecode.JUMPIFFALSE, wi.stop, getFunction(), module);
+			bytecode.add(skipOver2);
+			
+			if (it instanceof TryFinallyItem || it instanceof WithControllStackItem){
+				addBytecode(bytecode, Bytecode.SWAP_STACK, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);	// frame
+				addBytecode(bytecode, Bytecode.SWAP_STACK, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);	// return code (should be None)
+				addBytecode(bytecode, Bytecode.RERAISE, wi.stop);
+				if (it instanceof TryFinallyItem){
+					((TryFinallyItem)it).needsBreakBlock = true;
+				}
+			} else {
+				addBytecode(bytecode, Bytecode.POP, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);
+				addBytecode(bytecode, Bytecode.POP, wi.stop);
+				cb = addBytecode(bytecode, Bytecode.GOTO, wi.stop);
+				cb.intValue = ((LoopStackItem)it).start;
+			}
+			
+			skipOver2.intValue = bytecode.size();
+		}
+		
 		addBytecode(bytecode, Bytecode.RERAISE, wi.stop);
 		// If execution reaches here, there was no exception and there is still frame on top of stack.
 		// If this frame returned value, it should be returned from here as well.
@@ -2537,6 +2631,13 @@ public class PythonCompiler {
 				addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.start);
 				addBytecode(bytecode, Bytecode.POP, ctx.start);	// return code (should be None)
 				addBytecode(bytecode, Bytecode.RERAISE, ctx.start);
+			} else if (overMe instanceof WithControllStackItem) {
+				((TryFinallyItem)overMe).needsBreakBlock = true;
+				addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.start);
+				addBytecode(bytecode, Bytecode.POP, ctx.start);	// frame
+				addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.start);
+				addBytecode(bytecode, Bytecode.POP, ctx.start);	// return code (should be None)
+				addBytecode(bytecode, Bytecode.RERAISE, ctx.start);
 			} else {
 				addBytecode(bytecode, Bytecode.POP, ctx.start);	// exception
 				addBytecode(bytecode, Bytecode.POP, ctx.start);	// frame
@@ -2553,6 +2654,13 @@ public class PythonCompiler {
 			
 			ControllStackItem overMe = cs.peek();
 			if (overMe instanceof TryFinallyItem) {
+				((TryFinallyItem)overMe).needsContinueBlock = true;
+				addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.start);
+				addBytecode(bytecode, Bytecode.POP, ctx.start);	// frame
+				addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.start);
+				addBytecode(bytecode, Bytecode.POP, ctx.start);	// return code (should be None)
+				addBytecode(bytecode, Bytecode.RERAISE, ctx.start);
+			} else if (overMe instanceof WithControllStackItem) {
 				((TryFinallyItem)overMe).needsContinueBlock = true;
 				addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.start);
 				addBytecode(bytecode, Bytecode.POP, ctx.start);	// frame
@@ -2588,7 +2696,7 @@ public class PythonCompiler {
 	
 	private class LoopStackItem implements ControllStackItem {
 		private List<PythonBytecode> bcs = new LinkedList<>();
-		private int start;
+		public int start;
 
 		LoopStackItem(int startAddress) {
 			this.start = startAddress;
