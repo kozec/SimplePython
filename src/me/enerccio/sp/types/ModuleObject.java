@@ -69,10 +69,15 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 		}
 	}
 	
+	public ModuleObject(ModuleProvider p, boolean i) {
+		super(false);
+		this.provider = p;
+	}
+
 	/** provider bound to this module */
 	public final ModuleProvider provider;
 	/** bytecode of the body of this module */
-	private CompiledBlockObject frame;
+	public CompiledBlockObject frame;
 	/** whether this module is inited or not */
 	public volatile boolean isInited = false;
 
@@ -192,5 +197,9 @@ public class ModuleObject extends PythonObject implements ModuleInfo {
 	@Override
 	protected Map<String, JavaMethodObject> getGenHandles() {
 		return PythonObject.sfields;
+	}
+
+	public CompiledBlockObject getFrame() {
+		return frame;
 	}
 }

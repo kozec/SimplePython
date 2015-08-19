@@ -32,6 +32,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import me.enerccio.sp.compiler.ModuleDefinition;
 import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.errors.AttributeError;
@@ -261,8 +262,35 @@ public class PythonRuntime {
 	 * @return
 	 */
 	private Pair<ModuleObject, Boolean> loadModule(ModuleProvider provider){
-		ModuleObject mo = new ModuleObject(provider);
-		return Pair.makePair(mo, provider.isPackage());
+		if (provider.isPrecompiled()){
+			try {
+				ModuleDefinition md;
+				ModuleObject mo = (md = new ModuleDefinition(provider.getCompiledSource())).toModule(provider);
+				try {
+					md.writeToStream(provider.getPrecompilationTarget());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}		
+				return Pair.makePair(mo, provider.isPackage());
+			} catch (Exception e){
+				if (provider.getSource() == null){
+					return Pair.makePair(null, provider.isPackage());
+				} else {
+					return Pair.makePair(new ModuleObject(provider), provider.isPackage());
+				}
+			}
+		} else {
+			ModuleObject mo = new ModuleObject(provider);
+			if (provider.isAllowPrecompilation()){
+				ModuleDefinition md = new ModuleDefinition(mo);
+				try {
+					md.writeToStream(provider.getPrecompilationTarget());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			return Pair.makePair(mo, provider.isPackage());
+		}
 	}
 	
 	/**
@@ -467,10 +495,14 @@ public class PythonRuntime {
 					pythonParser p;
 					try {
 						p = ParserGenerator.parse(new ModuleProvider("builtin", 
-																	 "builtin", 
 																	 IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("builtin.py")), 
+																	 "builtin", 
 																	 null, 
-																	 false));
+																	 false,
+																	 false,
+																	 false,
+																	 null,
+																	 null));
 					} catch (Exception e1) {
 						throw new RuntimeException("Failed to initialize python!");
 					}
