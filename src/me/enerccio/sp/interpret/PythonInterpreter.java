@@ -237,26 +237,22 @@ public class PythonInterpreter extends PythonObject {
 	 * @return
 	 */
 	public ExecutionResult executeOnce(){
-		ExecutionResult r = doExecuteOnce();
-		if (r == ExecutionResult.EOF)
-			if (currentFrame.size() == 0)
-				return ExecutionResult.FINISHED;
-		return r;
-	}
-
-	private ExecutionResult doExecuteOnce() {
+		ExecutionResult r;
+		
+		
 		try {
 			PythonRuntime.runtime.waitIfSaving(this);
 		} catch (InterruptedException e) {
 			return ExecutionResult.INTERRUPTED;
 		}
 		
-		if (Thread.interrupted()){
+		if (Thread.interrupted())
 			return ExecutionResult.INTERRUPTED;
-		}
 		
 		if (exception() != null){
 			handleException(new PythonExecutionException(exception()));
+			if (currentFrame.size() == 0)
+				return ExecutionResult.FINISHED;
 			return ExecutionResult.EOF;
 		}
 		
@@ -270,12 +266,16 @@ public class PythonInterpreter extends PythonObject {
 			if (o.pc >= o.compiled.getBytedata().length){
 				removeLastFrame();
 				returnee = null;
+				if (currentFrame.size() == 0)
+					return ExecutionResult.FINISHED;
 				return ExecutionResult.EOF;
 			}
 			try {
 				return executeSingleInstruction(o);
 			} catch (PythonExecutionException e){
 				handleException(e);
+				if (currentFrame.size() == 0)
+					return ExecutionResult.FINISHED;
 				return ExecutionResult.EOF;
 			}
 		} finally {
