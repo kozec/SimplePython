@@ -49,8 +49,14 @@ import me.enerccio.sp.interpret.KwArgs;
 import me.enerccio.sp.interpret.PythonDataSourceResolver;
 import me.enerccio.sp.interpret.PythonExecutionException;
 import me.enerccio.sp.interpret.PythonInterpreter;
+<<<<<<< HEAD
 import me.enerccio.sp.parser.pythonParser;
 import me.enerccio.sp.types.AugumentedPythonObject;
+=======
+import me.enerccio.sp.sandbox.PythonSecurityManager;
+import me.enerccio.sp.sandbox.PythonSecurityManager.SecureAction;
+import me.enerccio.sp.types.AccessRestrictions;
+>>>>>>> 884f25f... pyc compilation for builtins, but you need to do it separately
 import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
@@ -142,6 +148,7 @@ public class PythonRuntime {
 	public static ClassObject STOP_ITERATION;
 	public static ClassObject GENERATOR_EXIT;
 	public static ClassObject INDEX_ERROR;
+	public static ClassObject RUNTIME_ERROR;
 	public static ClassObject TYPE_ERROR;
 	public static ClassObject IO_ERROR;
 	public static ClassObject SYNTAX_ERROR;
@@ -276,11 +283,11 @@ public class PythonRuntime {
 				if (provider.getSource() == null){
 					return Pair.makePair(null, provider.isPackage());
 				} else {
-					return Pair.makePair(new ModuleObject(provider), provider.isPackage());
+					return Pair.makePair(new ModuleObject(provider, false), provider.isPackage());
 				}
 			}
 		} else {
-			ModuleObject mo = new ModuleObject(provider);
+			ModuleObject mo = new ModuleObject(provider, false);
 			if (provider.isAllowPrecompilation()){
 				ModuleDefinition md = new ModuleDefinition(mo);
 				try {
@@ -492,31 +499,49 @@ public class PythonRuntime {
 					
 					addExceptions(globals);
 					
-					pythonParser p;
+					
+					ModuleProvider mp;
+					CompiledBlockObject builtin;
 					try {
-						p = ParserGenerator.parse(new ModuleProvider("builtin", 
-																	 IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("builtin.py")), 
-																	 "builtin", 
-																	 null, 
-																	 false,
-																	 false,
-																	 false,
-																	 null,
-																	 null));
+						mp = new ModuleProvider("builtin", 
+								 IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("builtin.py")), 
+								 "builtin", 
+								 null, 
+								 false,
+								 getClass().getClassLoader().getResourceAsStream("builtin.pyc") != null,
+								 false,
+								 null,
+								 IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("builtin.pyc")));
 					} catch (Exception e1) {
 						throw new RuntimeException("Failed to initialize python!");
 					}
 					
-					PythonCompiler c = new PythonCompiler();
-					CompiledBlockObject builtin = c.doCompile(p.file_input(), new ModuleInfo() { 
-						@Override public ModuleProvider getIncludeProvider() { return null ; }
-						@Override public String getName() { return "<builtin>"; }
-						@Override public String getFileName() { return getName(); }
-					}, null);
+					if (getClass().getClassLoader().getResourceAsStream("builtin.pyc") == null){
+						PythonCompiler c = new PythonCompiler();
+						try {
+							builtin = c.doCompile(ParserGenerator.parse(mp).file_input(), new ModuleInfo() { 
+								@Override public ModuleProvider getIncludeProvider() { return null ; }
+								@Override public String getName() { return "<builtin>"; }
+								@Override public String getFileName() { return getName(); }
+							}, null);
+						} catch (Exception e1) {
+							throw new RuntimeException("Failed to initialize python!");
+						}	
+					} else {
+						try {
+							ModuleObject mo = new ModuleDefinition(mp.getCompiledSource()).toModule(mp);
+							builtin = mo.frame;
+						} catch (Exception e1) {
+							throw new RuntimeException("Failed to initialize python!");
+						}
+					}
 					
-					PythonInterpreter.interpreter.get().executeBytecode(builtin);
+					PythonInterpreter i = PythonInterpreter.interpreter.get();
+					i.setArgs(new StringDictObject());
+					i.executeBytecode(builtin);
+					
 					while (true){
-						ExecutionResult r = PythonInterpreter.interpreter.get().executeOnce();
+						ExecutionResult r = i.executeOnce();
 						if (r == ExecutionResult.OK)
 							continue;
 						if (r == ExecutionResult.FINISHED)
@@ -532,6 +557,7 @@ public class PythonRuntime {
 					STOP_ITERATION	= (ClassObject)globals.getItem("StopIteration");
 					GENERATOR_EXIT	= (ClassObject)globals.getItem("GeneratorExit");
 					INDEX_ERROR		= (ClassObject)globals.getItem("IndexError");
+					RUNTIME_ERROR	= (ClassObject)globals.getItem("RuntimeError");
 					TYPE_ERROR		= (ClassObject)globals.getItem("TypeError");
 					IO_ERROR		= (ClassObject)globals.getItem("IOError");
 					SYNTAX_ERROR	= (ClassObject)globals.getItem("SyntaxError");
@@ -817,6 +843,7 @@ public class PythonRuntime {
 		addException(globals, "BaseException", "Error", false);
 		addException(globals, "SyntaxError", "Error", false);
 		addException(globals, "NativeError", "Error", false);
+		addException(globals, "RuntimeError", "Error", false);
 		addException(globals, "Exception", "BaseException", false);
 		addException(globals, "LoopBreak", "Exception", false);
 		addException(globals, "LoopContinue", "Exception", false);
