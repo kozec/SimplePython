@@ -784,6 +784,7 @@ public class PythonRuntime {
 		
 		addException(globals, "BaseException", "Error", false);
 		addException(globals, "SyntaxError", "Error", false);
+		addException(globals, "NativeError", "Error", false);
 		addException(globals, "Exception", "BaseException", false);
 		addException(globals, "LoopBreak", "Exception", false);
 		addException(globals, "LoopContinue", "Exception", false);
@@ -826,7 +827,7 @@ public class PythonRuntime {
 	}
 	
 	protected static PythonObject baseExcToStr(PythonObject e){
-		return new StringObject(Utils.run("str", e.get("__CLASS__", e)) + ": " + Utils.run("str", e.get("__msg__", e)));
+		return new StringObject(Utils.run("str", e.get(ClassObject.__CLASS__, e)) + ": " + Utils.run("str", e.get("__msg__", e)));
 	}
 	
 	protected static PythonObject initException(TupleObject o, KwArgs kwargs){

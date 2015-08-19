@@ -1358,7 +1358,7 @@ public class PythonCompiler {
 			int tlc = ctx.test().size();
 			if (tlc > 1){
 				cb = addBytecode(bytecode, Bytecode.LOADGLOBAL, ctx.start);
-				cb.stringValue = TupleTypeObject.TUPLE_CALL;
+				cb.stringValue = TupleTypeObject.MAKE_TUPLE_CALL;
 			}
 			
 			for (TestContext tc : ctx.test())
