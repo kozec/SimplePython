@@ -17,8 +17,12 @@
  */
 package me.enerccio.sp;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import me.enerccio.sp.errors.TypeError;
-import me.enerccio.sp.interpret.PythonDataSourceResolver;
+import me.enerccio.sp.interpret.ModuleResolver;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.ModuleObject;
@@ -31,12 +35,30 @@ import me.enerccio.sp.types.sequences.TupleObject;
 public class SimplePython {
 
 	private static PythonRuntime r;
+	public static List<File> pycCaches = new ArrayList<>();
 	
 	public static void initialize(){
 		r = PythonRuntime.runtime;
 	}
 
-	public static void addResolver(PythonDataSourceResolver resolver){
+	/** 
+	 * Adds new pyc files cache directory. Specified path must exists and must be writable.
+	 * Last path added will be used for writing cache files. When cached file is being searched,
+	 * last added path takes precedence and former is searched only if file is not found. 
+	 * */ 
+	public static void addPycCache(File path) {
+		pycCaches.add(0, path);
+	}
+	
+	/**
+	 * Adds the data source resolver. Data source resolver is the way for Simple Python to load modules.
+	 * Every resolver acts as a root for some part of the python path. If you need standard python path,
+	 * use PythonPathResolver. Internally, SimplePython uses InternalJavaPathResolver.
+	 * @param resolver PythonDataSourceResolver instance that will be queried for a module, in the order of the 
+	 * insertion. First resolver that returns the module will be the one used.
+	 * @see me.enerccio.sp.interpret.FilesystemResolver
+	 */
+	public static void addResolver(ModuleResolver resolver){
 		r.addResolver(resolver);
 	}
 	

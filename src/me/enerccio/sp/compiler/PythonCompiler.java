@@ -31,6 +31,7 @@ import me.enerccio.sp.errors.SyntaxError;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.parser.pythonParser;
 import me.enerccio.sp.interpret.InternalDict;
+import me.enerccio.sp.interpret.ModuleResolver;
 import me.enerccio.sp.parser.pythonParser.And_exprContext;
 import me.enerccio.sp.parser.pythonParser.And_testContext;
 import me.enerccio.sp.parser.pythonParser.ArglistContext;
@@ -112,9 +113,8 @@ import me.enerccio.sp.parser.pythonParser.Xor_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_or_exprContext;
 import me.enerccio.sp.parser.pythonParser.Yield_stmtContext;
-import me.enerccio.sp.runtime.ModuleInfo;
-import me.enerccio.sp.runtime.ModuleProvider;
 import me.enerccio.sp.runtime.PythonRuntime;
+import me.enerccio.sp.types.ModuleObject.ModuleData;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.ComplexObject;
 import me.enerccio.sp.types.base.EllipsisObject;
@@ -145,10 +145,12 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  */
 public class PythonCompiler {
 	public static volatile long genFunc = 0;
-	private static final ModuleInfo GENERATED_FUNCTIONS = new ModuleInfo() {
-		@Override public ModuleProvider getIncludeProvider() { return null ; }
+	private static final ModuleData GENERATED_FUNCTIONS = new ModuleData() {
+		@Override public ModuleResolver getResolver() { return null ; }
 		@Override public String getName() { return "<generated-functions>"; };
 		@Override public String getFileName() { return getName(); }
+		@Override public String getPackageResolve() { return ""; }
+		@Override public boolean isPackage() { return false; }
 	};
 
 	private PythonBytecode cb;
@@ -157,7 +159,7 @@ public class PythonCompiler {
 	private Stack<String> compilingFunction = new Stack<String>();
 	private Stack<String> docstring = new Stack<String>();
 	
-	private ModuleInfo module = null;
+	private ModuleData module = null;
 	
 	/**
 	 * Compiles source into single UserFunctionObject. Used by function() function
@@ -218,7 +220,7 @@ public class PythonCompiler {
 	 * @param m module
 	 * @return
 	 */
-	public CompiledBlockObject doCompile(File_inputContext fcx, ModuleInfo m, StringDictObject builtins) {
+	public CompiledBlockObject doCompile(File_inputContext fcx, ModuleData m, StringDictObject builtins) {
 		this.module = m;
 		compilingFunction.push(null);
 		
@@ -259,7 +261,7 @@ public class PythonCompiler {
 		return cob;
 	}
 
-	private void compile(File_inputContext fcx, List<PythonBytecode> bytecode, ModuleInfo m) {
+	private void compile(File_inputContext fcx, List<PythonBytecode> bytecode, ModuleData m) {
 		boolean first = true;
 		for (Label_or_stmtContext ls : fcx.label_or_stmt()){
 			if (first){
@@ -654,39 +656,47 @@ public class PythonCompiler {
 		addBytecode(bytecode, Bytecode.POP, try_stmt.start);
 	}
 
-	private void compile(Label_or_stmtContext ls, List<PythonBytecode> bytecode, ControllStack cs, ModuleInfo m) {
+	private void compile(Label_or_stmtContext ls, List<PythonBytecode> bytecode, ControllStack cs, ModuleData m) {
 		if (ls.include() != null)
 			compileInclude(ls.include(), bytecode, m);
 		if (ls.label() != null)
 			; // TODO: this
-		else if (ls.stmt() != null)
+		if (ls.stmt() != null)
 			compileStatement(ls.stmt(), bytecode, cs);
 	}
 
 
-	private void compileInclude(IncludeContext include, List<PythonBytecode> bytecode, final ModuleInfo m) {
+	private void compileInclude(IncludeContext include, List<PythonBytecode> bytecode, final ModuleData m) {
 		final String filename = include.nname().getText();
-		if (m.getIncludeProvider() == null)
+		if (m.getResolver() == null)
 			throw new me.enerccio.sp.errors.Error("can't use include in this module");
-		final ModuleProvider toInclude = PythonRuntime.runtime.getModuleSource(filename, m.getIncludeProvider().getPackageResolve());
+		final ModuleData toInclude = PythonRuntime.runtime.resolveModule(filename, new StringObject(m.getPackageResolve(), true));
 		pythonParser parser;
 		try {
 			parser = StaticTools.ParserGenerator.parse(toInclude);
 		} catch (Exception e) {
 			throw new SyntaxError("failed to parse source code of " + filename, e);
 		}
-		ModuleInfo prevModule = module;
-		module = new ModuleInfo() {
+		ModuleData prevModule = module;
+		module = new ModuleData() {
 			// filename here
-			@Override public ModuleProvider getIncludeProvider() { 
-				return toInclude;
+			@Override public ModuleResolver getResolver() { 
+				return toInclude.getResolver();
 			}
 			@Override public String getName() { 
 				// TODO: This is probably bad idea and needs some parsing
 				return filename;
 			};
 			@Override public String getFileName() {
-				return toInclude.getSrcFile();
+				return toInclude.getFileName();
+			}
+			@Override
+			public String getPackageResolve() {
+				return toInclude.getPackageResolve();
+			}
+			@Override
+			public boolean isPackage() {
+				return false;
 			}
 		};
 		compile(parser.file_input(), bytecode, m);

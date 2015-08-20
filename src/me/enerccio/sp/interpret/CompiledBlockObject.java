@@ -31,7 +31,7 @@ import me.enerccio.sp.compiler.Bytecode;
 import me.enerccio.sp.compiler.PythonBytecode;
 import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.errors.TypeError;
-import me.enerccio.sp.runtime.ModuleInfo;
+import me.enerccio.sp.types.ModuleObject.ModuleData;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
@@ -79,7 +79,7 @@ public class CompiledBlockObject extends PythonObject {
 
 	public static class DebugInformation {
 		public int lineno, charno;
-		public ModuleInfo module;
+		public ModuleData module;
 		public String function;
 		@Override
 		public int hashCode() {

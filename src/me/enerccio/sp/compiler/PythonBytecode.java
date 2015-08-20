@@ -20,7 +20,7 @@ package me.enerccio.sp.compiler;
 import java.util.Map;
 import java.util.Set;
 
-import me.enerccio.sp.runtime.ModuleInfo;
+import me.enerccio.sp.types.ModuleObject.ModuleData;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
 
@@ -39,7 +39,7 @@ public class PythonBytecode extends PythonObject {
 	public int debugLine = -1;
 	public int debugCharacter;
 	public String debugFunction;
-	public ModuleInfo debugModule = null;
+	public ModuleData debugModule = null;
 
 	/* fields used by various bytecodes */
 	public int intValue;

@@ -15,23 +15,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library.
  */
-package me.enerccio.sp.interpret;
+package me.enerccio.sp.errors;
 
-import me.enerccio.sp.runtime.ModuleProvider;
+import me.enerccio.sp.runtime.PythonRuntime;
 
-/**
- * This interface is for customizing where will python look for resolving imports
- * @author Enerccio
- *
- */
-public interface PythonDataSourceResolver {
-
-	/**
-	 * Constructs module provider for the requested name and requested path, or null if name does not corresponds to any real module
-	 * @param name
-	 * @param resolvePath
-	 * @return null or ModuleProvider
-	 */
-	ModuleProvider resolve(String name, String resolvePath);
+public class RuntimeError extends PythonException {
+	private static final long serialVersionUID = 5421505414L;
 	
+	public RuntimeError(String message) {
+		super(PythonRuntime.RUNTIME_ERROR, message, null);
+	}
 }

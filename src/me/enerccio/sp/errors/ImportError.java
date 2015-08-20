@@ -25,4 +25,8 @@ public class ImportError extends PythonException {
 	public ImportError(String message) {
 		super(PythonRuntime.INTERPRETER_ERROR, message);
 	}
+
+	public ImportError(String message, Throwable cause) {
+		super(PythonRuntime.IMPORT_ERROR, message, cause);
+	}
 }
