@@ -158,7 +158,7 @@ public abstract class SequenceObject extends ContainerObject
 			throw new TypeError("Index must be int");
 		int i = ((NumberObject)idx).intValue();
 		if (i >= o.len() || i<-(o.len()))
-			throw new IndexError("Incorrect index, expected (" + -o.len() + ", " + o.len() + "), got " + i);
+			throw new IndexError("list index out of range; expected " + -o.len() + " <= i <= " + (o.len()-1) + ", got " + i);
 		return o.valueAt(morphAround(i, o.len()));
 	}
 

@@ -902,6 +902,8 @@ public class PythonInterpreter extends PythonObject {
 		PythonObject po;
 		StringObject field = (StringObject) o.compiled.getConstant(o.nextInt());
 		PythonObject value = stack.pop();	// object to get attribute from
+		if (value instanceof FutureObject)
+			value = ((FutureObject) value).getValue();
 		po = value.get("__getattribute__", null); 
 		if (po != null) {
 			// There is __getattribute__ defined, call it directly
