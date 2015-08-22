@@ -147,15 +147,12 @@ public abstract class PythonObject implements Serializable, HasEqMethod, HasNeMe
 	}
 
 	/**
-	 * Returns the field value, ignoring AccessRestrictions
+	 * Returns the field value using default context
 	 * @param key
 	 * @return
 	 */
 	public synchronized PythonObject get(String key) {
-		AugumentedPythonObject field = fields.get(key);
-		if (field == null)
-			return null;
-		return field.object;
+		return get(key, null);
 	}
 
 	protected PythonObject possiblyGenHandle(String key) {
