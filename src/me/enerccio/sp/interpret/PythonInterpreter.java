@@ -272,6 +272,13 @@ public class PythonInterpreter extends PythonObject {
 			}
 			try {
 				return executeSingleInstruction(o);
+			} catch (PythonException e) {
+				PythonExecutionException pee = new PythonExecutionException(
+						e.type.call(new TupleObject(true, new StringObject(e.message)), KwArgs.EMPTY), e);
+				handleException(pee);
+				if (currentFrame.size() == 0)
+					return ExecutionResult.FINISHED;
+				return ExecutionResult.EOF;
 			} catch (PythonExecutionException e){
 				handleException(e);
 				if (currentFrame.size() == 0)
