@@ -56,7 +56,7 @@ public class JavaMethodObject extends CallableObject {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	public static @interface SpyDoc {
-		String value();
+		String[] value();
 	}
 	
 	@Override
@@ -81,8 +81,10 @@ public class JavaMethodObject extends CallableObject {
 		this.boundHandle.setAccessible(true);
 		this.argNames = m.isAnnotationPresent(ArgNames.class) ? m.getAnnotation(ArgNames.class).value() : null;
 		this.noTypeConversion = false;
-		if (m.isAnnotationPresent(SpyDoc.class))
-			this.fields.put(__DOC__, new AugumentedPythonObject(new StringObject(m.getAnnotation(SpyDoc.class).value()), null));
+		if (m.isAnnotationPresent(SpyDoc.class)) {
+			String doc = getPydoc(m);
+			this.fields.put(__DOC__, new AugumentedPythonObject(new StringObject(doc), null));
+		}
 	}
 	
 	/**
@@ -167,7 +169,25 @@ public class JavaMethodObject extends CallableObject {
 	}
 
 	private static String getPydoc(Method m) {
-		return m.isAnnotationPresent(SpyDoc.class) ?  m.getAnnotation(SpyDoc.class).value() : null;
+		if (m.isAnnotationPresent(SpyDoc.class)) {
+			String[] s = m.getAnnotation(SpyDoc.class).value();
+			if (s.length == 1) {
+				return s[0];
+			} else {
+				StringBuilder sb = new StringBuilder();
+				boolean first = true;
+				for (String line : s) {
+					if (first)
+						first = false;
+					else
+						sb.append('\n');
+					sb.append(line);
+				}
+				return sb.toString();
+			}
+		} else {
+			return null;
+		}
 	}
 
 	/** Method handle */
