@@ -18,8 +18,11 @@
 package me.enerccio.sp.types.callables;
 
 import me.enerccio.sp.interpret.KwArgs;
+import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.sequences.TupleObject;
+import me.enerccio.sp.utils.CastFailedException;
+import me.enerccio.sp.utils.Coerce;
 
 /**
  * Callable objects that interpret can call
@@ -45,5 +48,24 @@ public abstract class CallableObject extends PythonObject {
 	public boolean truthValue() {
 		return true;
 	}
+	
+	public <T> T exec(Class<? extends T> cls, KwArgs kw, PythonObject... a) throws CastFailedException {
+		return Coerce.toJava(
+				PythonInterpreter.interpreter.get().execute(true, this, kw, a),
+				cls);
+	}
+	
+	public PythonObject exec(KwArgs kw, PythonObject... a) {
+		return PythonInterpreter.interpreter.get().execute(true, this, kw, a);
+	}
 
+	public <T> T exec(Class<? extends T> cls, PythonObject... a) throws CastFailedException {
+		return Coerce.toJava(
+				PythonInterpreter.interpreter.get().execute(true, this, KwArgs.EMPTY, a),
+				cls);
+	}
+	
+	public PythonObject exec(PythonObject... a) {
+		return PythonInterpreter.interpreter.get().execute(true, this, KwArgs.EMPTY, a);
+	}
 }
