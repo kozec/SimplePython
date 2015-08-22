@@ -52,7 +52,26 @@ public class JavaCongruentAggregatorObject extends CallableObject {
 				if (methods.size() == 1)
 					throw new TypeError(e.getMessage(), e);
 			}
-		throw new TypeError(name + "(): no applicable method found");
+		// Build type list for error message
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i<args.len(); i++) {
+			if (i != 0)
+				sb.append(", ");
+			if (args.get(i).getType().get(ClassObject.__NAME__, null) == null)
+				sb.append(args.get(i).getType().toString());
+			else
+				sb.append(args.get(i).getType().get(ClassObject.__NAME__, null).toString());
+		}
+		// Add kwargs type if needed
+		if (kwargs != null) {
+			if (sb.length() == 0)
+				sb.append("kwargs");
+			else
+				sb.append(", kwargs");
+		}
+		// Throw some stuff
+		throw new TypeError(name + "(): no applicable method '" + name +
+				"' for arguments (" + sb.toString() + ") found");
 	}
 
 	@Override
