@@ -1003,6 +1003,8 @@ public class PythonRuntime {
 			}
 		}
 		
+		if (o instanceof PythonObject)
+			return (PythonObject)o;
 		PointerFactory factory = getFactory(cls);
 		if (factory == null){
 			throw new TypeError("javainstance(): no available factory for class " + cls);
