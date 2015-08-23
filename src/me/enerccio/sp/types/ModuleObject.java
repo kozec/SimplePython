@@ -17,15 +17,23 @@
  */
 package me.enerccio.sp.types;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
+import me.enerccio.sp.SimplePython;
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.errors.SyntaxError;
 import me.enerccio.sp.interpret.CompiledBlockObject;
+import me.enerccio.sp.interpret.FilesystemResolver;
 import me.enerccio.sp.interpret.FrameObject;
 import me.enerccio.sp.interpret.InternalDict;
+import me.enerccio.sp.interpret.InternalJavaPathResolver;
 import me.enerccio.sp.interpret.ModuleResolver;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.parser.pythonParser;
@@ -67,14 +75,45 @@ public class ModuleObject extends PythonObject {
 		Utils.putPublic(this, __NAME__, new StringObject(data.getName()));
 		
 		try {
+			//long c1 = System.currentTimeMillis();
 			pythonParser p = ParserGenerator.parse(data);
+			//long c2 = System.currentTimeMillis();
+			//System.out.println(data.getName() + ": Parsing    took " + (c2 - c1) + " ms");
+			StringDictObject globs = compilingBT ? null : PythonRuntime.runtime.getGlobals();
+			//long c3 = System.currentTimeMillis();
 			File_inputContext fcx = p.file_input();
 			if (fcx != null){
-				frame = new PythonCompiler().doCompile(fcx, data, compilingBT ? null : PythonRuntime.runtime.getGlobals());
+				frame = new PythonCompiler().doCompile(fcx, data, globs);
 			}
+			//long c4 = System.currentTimeMillis();
+			//System.out.println(data.getName() + ": getGlobals took " + (c3 - c2) + " ms");
+			//System.out.println(data.getName() + ": Compile    took " + (c4 - c3) + " ms");
+			
 		} catch (Exception e) {
 			throw new SyntaxError("failed to parse source code of " + data.getFileName(), e);
 		}
+	}
+	
+	public static void main(String[] trash) {
+		
+		SimplePython.initialize();
+		SimplePython.setAllowAutowraps(true);
+		SimplePython.addResolver(new FilesystemResolver(Paths.get("").toAbsolutePath().toString() + File.separator + "bin" + File.separator + "t"));
+		
+		final ModuleResolver res = new InternalJavaPathResolver();
+		final ModuleData md = new ModuleData() {
+			@Override public boolean isPackage() { return false; }
+			@Override public ModuleResolver getResolver() { return res; }
+			@Override public String getPackageResolve() { return ""; }
+			@Override public String getName() { return "x"; }
+			@Override public String getFileName() { return "x.py"; }
+		};
+		
+		//ModuleObject m = new ModuleObject(md, false);
+		//m.initModule();
+		
+		ModuleObject x = SimplePython.getModule("x");
+		
 	}
 	
 	public ModuleObject(ModuleData data) {
@@ -127,14 +166,14 @@ public class ModuleObject extends PythonObject {
 	@Override
 	public synchronized PythonObject get(String key, PythonObject localContext) {
 		PythonObject o = super.get(key, localContext);
-		if (o == null)
+		if ((o == null) && (globals != null))
 			o = globals.doGet(key);
 		return o;
 	}
 
 	@Override
 	protected String doToString() {
-		return "<Module " + get(__NAME__, this).toString() + " at 0x" + Integer.toHexString(hashCode()) + ">";
+		return "<Module " +get(__NAME__, this) + " at 0x" + Integer.toHexString(hashCode()) + ">";
 	}
 
 	/** 
@@ -154,9 +193,13 @@ public class ModuleObject extends PythonObject {
 		
 		FrameObject newFrame = PythonInterpreter.interpreter.get().currentFrame.getLast();
 		
-		InternalDict args = new StringDictObject();
+		StringDictObject args = new StringDictObject();
 		args.putVariable(__THISMODULE__, this);
 		args.putVariable(__NAME__, new StringObject(data.getName()));
+		if (injectedGlobals != null) {
+			args.append(injectedGlobals);		
+			args.putVariable(__INJECTED__, injectedGlobals);		
+		}		
 		
 		PythonInterpreter.interpreter.get().setArgs(args);
 		

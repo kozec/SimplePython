@@ -267,6 +267,15 @@ public class PythonRuntime {
 	 * @return
 	 */
 	public synchronized ModuleObject getModule(String name, StringObject moduleResolvePath, StringDictObject injectGlobals){
+		ModuleObject mo = loadModule(name, moduleResolvePath, injectGlobals);
+		mo.initModule();
+		return mo;
+	}
+	
+	/**
+	 * Loads & compiles module without executing its code
+	 */
+	public synchronized ModuleObject loadModule(String name, StringObject moduleResolvePath, StringDictObject injectGlobals){
 		if (moduleResolvePath == null)
 			moduleResolvePath = new StringObject("", true);
 		
@@ -324,7 +333,6 @@ public class PythonRuntime {
 		
 		if (injectGlobals != null)
 			mo.setInjectGlobals(injectGlobals);		
-		mo.initModule();
 		return mo;
 	}
 	
@@ -535,6 +543,8 @@ public class PythonRuntime {
 	 * Provides default cache resolution. Used by ModuleResolver classes; Do not use manually.
 	 */
 	public static InputStream cachedRead(ModuleData data) {
+		if (data.getName().contains("random"))
+			return null;
 		String pycname = data.getName() + "." + getCacheHash(data) + ".pyc";
 		long lastMod = data.getResolver().lastModified(data);
 		for (File f : SimplePython.pycCaches) {
