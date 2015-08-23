@@ -399,7 +399,7 @@ public abstract class NumberObject extends PythonObject
 							}
 							return IntObject.getCached(r);
 						} else {
-							return NumberObject.valueOf(value + n.longValue());
+							return NumberObject.valueOf(value - n.longValue());
 						}
 				}
 			}
@@ -426,7 +426,7 @@ public abstract class NumberObject extends PythonObject
 								throw new TypeError("int overflow");
 	    					return IntObject.getCached(ir);
 						} else {
-							return NumberObject.valueOf(value + n.longValue());
+							return NumberObject.valueOf(value * n.longValue());
 						}
 				}
 			}
