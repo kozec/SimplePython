@@ -49,6 +49,7 @@ import me.enerccio.sp.errors.PythonException;
 import me.enerccio.sp.errors.RuntimeError;
 import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.errors.ValueError;
+import me.enerccio.sp.external.JavaRandom;
 import me.enerccio.sp.interpret.CompiledBlockObject;
 import me.enerccio.sp.interpret.EnvironmentObject;
 import me.enerccio.sp.interpret.ExecutionResult;
@@ -79,6 +80,7 @@ import me.enerccio.sp.types.mappings.StringDictObject;
 import me.enerccio.sp.types.pointer.PointerFactory;
 import me.enerccio.sp.types.pointer.PointerFinalizer;
 import me.enerccio.sp.types.pointer.PointerObject;
+import me.enerccio.sp.types.pointer.WrapAnnotationFactory;
 import me.enerccio.sp.types.pointer.WrapNoMethodsFactory;
 import me.enerccio.sp.types.sequences.ListObject;
 import me.enerccio.sp.types.sequences.SequenceObject;
@@ -129,7 +131,10 @@ public class PythonRuntime {
 	
 	private PythonRuntime(){
 		addFactory("", WrapNoMethodsFactory.class);
+		addFactory("me.enerccio.sp.external", WrapAnnotationFactory.class);
 		addResolver(ijpr);
+		
+		addAlias(JavaRandom.class.getName(), 			"__random__");
 	}
 	
 	/** Map containing root modules, ie modules that were accessed from the root of any of resolvers */
