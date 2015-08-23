@@ -23,7 +23,7 @@ public class ImportError extends PythonException {
 	private static final long serialVersionUID = 54215546315414L;
 	
 	public ImportError(String message) {
-		super(PythonRuntime.INTERPRETER_ERROR, message);
+		super(PythonRuntime.IMPORT_ERROR, message);
 	}
 
 	public ImportError(String message, Throwable cause) {
