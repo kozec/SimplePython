@@ -52,12 +52,16 @@ public class BoolObject extends NumberObject {
 	public boolean truthValue() {
 		return value;
 	}
-	
 
 	@Override public int intValue() { return value ? 1 : 0; }
 	@Override public long longValue() { return value ? 1l : 0l; }
 	@Override public float floatValue() { return value ? 1.f : 0.f; }
 	@Override public double doubleValue() { return value ? 1.0 : 0.0; }
+
+	@Override
+	public NumberObject negative() {
+		return NumberObject.valueOf(-intValue());
+	}
 
 	public static PythonObject fromBoolean(Boolean ret) {
 		return ret ? TRUE : FALSE;

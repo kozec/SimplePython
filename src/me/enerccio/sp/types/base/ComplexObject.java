@@ -86,6 +86,14 @@ public class ComplexObject extends NumberObject {
 	@Override public double getImaginaryValue() { return ((NumberObject)fields.get(IMAG_ACCESSOR).object).doubleValue() ; }
 	
 	@Override
+	public NumberObject negative() {
+		return new ComplexObject(
+				- ((NumberObject)Utils.get(this, REAL_ACCESSOR)).doubleValue(),
+				- ((NumberObject)Utils.get(this, IMAG_ACCESSOR)).doubleValue()
+		);
+	}
+
+	@Override
 	public PythonObject add(PythonObject b){
 		if (b instanceof NumberObject) {
 			NumberObject n = (NumberObject)b;

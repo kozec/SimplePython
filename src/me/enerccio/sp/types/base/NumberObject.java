@@ -88,7 +88,9 @@ public abstract class NumberObject extends PythonObject
 	@Override protected void registerObject(){ }
 	
 	public static NumberObject valueOf(int n) {
-		return IntObject.getCached(n);
+		if (PythonRuntime.USE_INT_ONLY) 
+			return IntObject.getCached(n);
+		return new LongObject(n);
 	}
 	
 	public static NumberObject valueOf(long n) {
@@ -113,9 +115,15 @@ public abstract class NumberObject extends PythonObject
 
 	/** Returns True if specified PythonObject is NumberObject and int */ 
 	public static boolean isInteger(PythonObject o) {
-		if (o instanceof NumberObject)
+		if (o instanceof NumberObject) {
 			if (((NumberObject)o).getNumberType() == NumberType.INT)
 				return true;
+			if (((NumberObject)o).getNumberType() == NumberType.LONG) {
+				long v = ((NumberObject)o).longValue();
+				if ((Integer.MIN_VALUE <= v) && (v <= Integer.MAX_VALUE))
+					return true;
+			}
+		}
 		return false;
 	}
 	
@@ -210,6 +218,7 @@ public abstract class NumberObject extends PythonObject
 	public abstract float floatValue();
 	public abstract double doubleValue();
 	public abstract NumberType getNumberType();
+	public abstract NumberObject negative();
 	
 	public double getRealValue() { return doubleValue(); }
 	public double getImaginaryValue() { return 0.0; }
@@ -350,7 +359,10 @@ public abstract class NumberObject extends PythonObject
 		@Override public float floatValue() { return value; }
 		@Override public double doubleValue() { return value; }
 		
-		public IntObject negative() {
+		@Override
+		public NumberObject negative() {
+			if (value == Integer.MIN_VALUE)
+				throw new TypeError("integer overflow");			
 			return IntObject.getCached(-value);
 		}
 
@@ -389,7 +401,7 @@ public abstract class NumberObject extends PythonObject
 					case COMPLEX:
 					case LONG:
 					case FLOAT:
-						return n.add(negative());
+						return n.negative().add(this);
 					case BOOL:
 					case INT:
 						if (PythonRuntime.USE_INT_ONLY) {
@@ -755,6 +767,11 @@ public abstract class NumberObject extends PythonObject
 		@Override public float floatValue() { return value; }
 		@Override public double doubleValue() { return value; }
 
+		@Override 
+		public NumberObject negative() {
+			return new LongObject(-value);
+		}
+
 		@Override
 		public PythonObject add(PythonObject b){
 			if (b instanceof StringObject)
@@ -781,7 +798,7 @@ public abstract class NumberObject extends PythonObject
 				switch (n.getNumberType()) {
 					case COMPLEX:
 					case FLOAT:
-						return n.add(new LongObject(-value));
+						return n.negative().add(this);
 					case LONG:
 					case INT:
 					case BOOL:
@@ -1106,6 +1123,11 @@ public abstract class NumberObject extends PythonObject
 		@Override public float floatValue() { return value; }
 		@Override public double doubleValue() { return value; }
 		
+		@Override 
+		public NumberObject negative() {
+			return new FloatObject(-value);
+		}
+
 		@Override
 		public PythonObject add(PythonObject b){
 			if (b instanceof StringObject)
@@ -1131,7 +1153,7 @@ public abstract class NumberObject extends PythonObject
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
 					case COMPLEX:
-						return n.add(new FloatObject(-value));
+						return n.negative().add(this);
 					case FLOAT:
 					case LONG:
 					case INT:
@@ -1359,6 +1381,11 @@ public abstract class NumberObject extends PythonObject
 		@Override public float floatValue() { return (float)value; }
 		@Override public double doubleValue() { return value; }
 		
+		@Override 
+		public NumberObject negative() {
+			return new DoubleObject(-value);
+		}
+
 		@Override
 		public PythonObject add(PythonObject b){
 			if (b instanceof StringObject)
@@ -1384,7 +1411,7 @@ public abstract class NumberObject extends PythonObject
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
 					case COMPLEX:
-						return n.add(new DoubleObject(-value));
+						return n.negative().add(this);
 					case FLOAT:
 					case LONG:
 					case INT:
