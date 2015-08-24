@@ -2510,15 +2510,36 @@ public class PythonCompiler {
 	}
 	
 	private void compileAssignment(AtomContext ctx, List<PythonBytecode> bytecode) {
-		if (ctx.listmaker() != null)
-			throw new SyntaxError("can't assign to generator expression");
-		if (ctx.dictorsetmaker() != null)
+		if (ctx.listmaker() != null) {
+			if (ctx.listmaker().list_for() != null)
+				throw new SyntaxError("can't assign to list comprehension");
+			else {
+				// [x,y,z] = ...
+				ListmakerContext tc = ctx.listmaker();
+				cb = addBytecode(bytecode, Bytecode.UNPACK_SEQUENCE, tc.start);
+				cb.intValue = tc.test().size();
+				for (int i=0; tc.test(i) != null; i++)
+					compileAssignment(tc.test(i), bytecode);
+			}
+		}
+		else if (ctx.dictorsetmaker() != null)
 			throw new SyntaxError("can't assign to generator literal");
-		if ( (ctx.number() != null) || (ctx.string().size() > 0) )
+		else if ( (ctx.number() != null) || (ctx.string().size() > 0) )
 			throw new SyntaxError("can't assign to literal");
-		if (ctx.bracket_atom() != null)
-			throw new SyntaxError("can't assign to generator expression");
-		compileAssignment(ctx.nname(), bytecode);
+		else if (ctx.bracket_atom() != null) {
+			if (ctx.bracket_atom().testlist_comp().comp_for() != null)
+				throw new SyntaxError("can't assign to generator expression");
+			else {
+				// (x,y,z) = ...
+				Testlist_compContext tc;
+				tc = ctx.bracket_atom().testlist_comp();
+				cb = addBytecode(bytecode, Bytecode.UNPACK_SEQUENCE, tc.start);
+				cb.intValue = tc.test().size();
+				for (int i=0; tc.test(i) != null; i++)
+					compileAssignment(tc.test(i), bytecode);
+			}
+		} else
+			compileAssignment(ctx.nname(), bytecode);
 	}
 
 	private void compileAssignment(NnameContext nname, List<PythonBytecode> bytecode) {
