@@ -73,6 +73,7 @@ import me.enerccio.sp.types.callables.ClassObject;
 import me.enerccio.sp.types.callables.JavaCongruentAggregatorObject;
 import me.enerccio.sp.types.callables.JavaFunctionObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
+import me.enerccio.sp.types.callables.PythonEventObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.callables.UserMethodObject;
 import me.enerccio.sp.types.mappings.DictObject;
@@ -92,6 +93,7 @@ import me.enerccio.sp.types.types.BoolTypeObject;
 import me.enerccio.sp.types.types.BoundFunctionTypeObject;
 import me.enerccio.sp.types.types.ComplexTypeObject;
 import me.enerccio.sp.types.types.DictTypeObject;
+import me.enerccio.sp.types.types.EventTypeObject;
 import me.enerccio.sp.types.types.FloatTypeObject;
 import me.enerccio.sp.types.types.FunctionTypeObject;
 import me.enerccio.sp.types.types.IntTypeObject;
@@ -409,6 +411,7 @@ public class PythonRuntime {
 	public static final TypeObject LONG_TYPE = new LongTypeObject();
 	public static final TypeObject FLOAT_TYPE = new FloatTypeObject();
 	public static final TypeObject LIST_TYPE = new ListTypeObject();
+	public static final TypeObject EVENT_TYPE = new EventTypeObject();
 	
 	static {
 		OBJECT_TYPE.newObject();
@@ -452,7 +455,6 @@ public class PythonRuntime {
 					globals.put(LOCALS, Utils.staticMethodCall(PythonRuntime.class, LOCALS));
 					globals.put(GLOBALS, Utils.staticMethodCall(PythonRuntime.class, GLOBALS));
 					globals.put(TypeTypeObject.TYPE_CALL, TYPE_TYPE);
-					globals.put(NoneTypeObject.NONE_TYPE_CALL, NONE_TYPE);
 					globals.put(StringTypeObject.STRING_CALL, STRING_TYPE);
 					globals.put(TupleTypeObject.TUPLE_CALL, TUPLE_TYPE);
 					globals.put(TupleTypeObject.MAKE_TUPLE_CALL, Utils.staticMethodCall(true, TupleTypeObject.class, "make_tuple", TupleObject.class, KwArgs.class));
@@ -462,7 +464,7 @@ public class PythonRuntime {
 					globals.put(IntTypeObject.INT_CALL, INT_TYPE);
 					globals.put(BoolTypeObject.BOOL_CALL, BOOL_TYPE);
 					globals.put(ObjectTypeObject.OBJECT_CALL, OBJECT_TYPE);
-					globals.put(FloatTypeObject.FLOAT_CALL, new FloatTypeObject());
+					globals.put(FloatTypeObject.FLOAT_CALL, FLOAT_TYPE);
 					globals.put(FunctionTypeObject.FUNCTION_CALL, FUNCTION_TYPE);
 					globals.put(SliceTypeObject.SLICE_CALL, new SliceTypeObject());
 					globals.put(JavaInstanceTypeObject.JAVA_CALL, new JavaInstanceTypeObject());
@@ -471,7 +473,7 @@ public class PythonRuntime {
 					globals.put(ComplexTypeObject.COMPLEX_CALL, new ComplexTypeObject());
 					globals.put(BoundFunctionTypeObject.BOUND_FUNCTION_CALL, new BoundFunctionTypeObject());
 					globals.put(XRangeTypeObject.XRANGE_CALL, new XRangeTypeObject());
-					globals.put(NoneTypeObject.NONE_TYPE_CALL, new NoneTypeObject());
+					globals.put(EventTypeObject.EVENT_CALL, EVENT_TYPE); 
 					
 					addExceptions(globals);
 					
@@ -810,6 +812,8 @@ public class PythonRuntime {
 			return JAVA_CALLABLE_TYPE;
 		if (py instanceof BoundHandleObject)
 			return BOUND_FUNCTION_TYPE;
+		if (py instanceof PythonEventObject)
+			return EVENT_TYPE;
 		return OBJECT_TYPE;
 	}
 
