@@ -207,15 +207,23 @@ simple_stmt:
 
 small_stmt:
  (expr_stmt | print_stmt | del_stmt | pass_stmt | flow_stmt |
-            import_stmt | global_stmt)
+            import_stmt | global_stmt | eventdef )
 ;
 
 with_stmt:
-'with' with_item (',' with_item)*  ':' suite
+ 'with' with_item (',' with_item)*  ':' suite
 ;
 
 with_item: 
-test ('as' expr)?
+ test ('as' expr)?
+;
+
+eventdef:
+ 'event' nname '(' farg? (',' farg)* ')'
+;
+
+on_stmt:
+ 'on' nname ('.' nname)? '(' ((farg? (',' farg)* (',' vararg)? ','?) | (vararg ','?)) ')' ':' suite
 ;
 
 parenthesesless_call:
@@ -330,7 +338,7 @@ global_stmt:
 ;
 
 compound_stmt:
- if_stmt | while_stmt | for_stmt | try_stmt | switch_stmt | funcdef | classdef | decorated | with_stmt
+ if_stmt | while_stmt | for_stmt | try_stmt | switch_stmt | funcdef | classdef | decorated | with_stmt | on_stmt
 ;
 
 if_stmt:

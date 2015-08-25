@@ -55,6 +55,7 @@ import me.enerccio.sp.parser.pythonParser.DictorsetmakerContext;
 import me.enerccio.sp.parser.pythonParser.Dotted_as_nameContext;
 import me.enerccio.sp.parser.pythonParser.Dotted_as_namesContext;
 import me.enerccio.sp.parser.pythonParser.Dotted_nameContext;
+import me.enerccio.sp.parser.pythonParser.EventdefContext;
 import me.enerccio.sp.parser.pythonParser.ExprContext;
 import me.enerccio.sp.parser.pythonParser.Expr_stmtContext;
 import me.enerccio.sp.parser.pythonParser.ExprlistContext;
@@ -81,6 +82,7 @@ import me.enerccio.sp.parser.pythonParser.ListmakerContext;
 import me.enerccio.sp.parser.pythonParser.NnameContext;
 import me.enerccio.sp.parser.pythonParser.Not_testContext;
 import me.enerccio.sp.parser.pythonParser.NumberContext;
+import me.enerccio.sp.parser.pythonParser.On_stmtContext;
 import me.enerccio.sp.parser.pythonParser.Or_testContext;
 import me.enerccio.sp.parser.pythonParser.PowerContext;
 import me.enerccio.sp.parser.pythonParser.Print_stmtContext;
@@ -120,6 +122,7 @@ import me.enerccio.sp.types.base.ComplexObject;
 import me.enerccio.sp.types.base.EllipsisObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.base.NumberObject;
+import me.enerccio.sp.types.callables.PythonEventObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.mappings.DictObject;
 import me.enerccio.sp.types.mappings.StringDictObject;
@@ -315,8 +318,10 @@ public class PythonCompiler {
 				compileClass(dc.classdef(), bytecode, dc.decorators());
 			else if (dc.funcdef() != null)
 				compileFunction(dc.funcdef(), bytecode, dc.decorators());
-		} else if (cstmt.with_stmt() != null){
+		} else if (cstmt.with_stmt() != null) {
 			compileWith(cstmt.with_stmt(), bytecode, cs);
+		} else if (cstmt.on_stmt() != null) {
+			compileOn(cstmt.on_stmt(), bytecode, cs);
 		} else
 			throw new SyntaxError("statament type not implemented");
 	}
@@ -327,14 +332,29 @@ public class PythonCompiler {
 		for (StmtContext sctx : ctx.stmt())
 			compileStatement(sctx, bytecode, cs);
 	}
+
+	private void compileOn(On_stmtContext ctx, List<PythonBytecode> bytecode, ControllStack cs) {
+		UserFunctionObject fnc = new UserFunctionObject();
+		
+		String functionName = "eventhander";
+		Utils.putPublic(fnc, "__name__", new StringObject(compilingClass.peek() == null ? functionName : compilingClass.peek() + "." + functionName));
+		
+		cb = addBytecode(bytecode, Bytecode.LOAD, ctx.start);
+		cb.stringValue = ctx.nname(0).getText();
+		cb = addBytecode(bytecode, Bytecode.GETATTR, ctx.start);
+		cb.stringValue = PythonEventObject.__ADDHANDLER__;
+
+		compileLambdaBody(fnc, ctx.farg(), ctx.vararg(), ctx.suite(), bytecode);
+		
+		cb = addBytecode(bytecode, Bytecode.KCALL, ctx.start);
+		cb.intValue = 1;
+	}
 	
-	private void compileWith(With_stmtContext with_stmt,
-			List<PythonBytecode> bytecode, ControllStack cs) {
+	private void compileWith(With_stmtContext with_stmt, List<PythonBytecode> bytecode, ControllStack cs) {
 		compileWith(0, with_stmt.with_item(), with_stmt.suite(), bytecode, cs);
 	}
 
-	private void compileWith(int i, List<With_itemContext> items,
-			SuiteContext suite, List<PythonBytecode> bytecode, ControllStack cs) {
+	private void compileWith(int i, List<With_itemContext> items, SuiteContext suite, List<PythonBytecode> bytecode, ControllStack cs) {
 		if (i == items.size()){
 			compileWithBody(suite, bytecode, cs);
 		} else {
@@ -1189,9 +1209,34 @@ public class PythonCompiler {
 			compile(smstmt.flow_stmt(), bytecode, cs);
 		} else if (smstmt.del_stmt() != null){
 			compile(smstmt.del_stmt(), bytecode);
+		} else if (smstmt.eventdef() != null){
+			compile(smstmt.eventdef(), bytecode);
 		}
 	}
 
+	private void compile(EventdefContext ctx, List<PythonBytecode> bytecode) {
+		cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, ctx.start);
+		cb.stringValue = "event";
+
+		cb = addBytecode(bytecode, Bytecode.LOADBUILTIN, ctx.start);
+		cb.stringValue = TupleTypeObject.MAKE_TUPLE_CALL;
+		for (FargContext i : ctx.farg()) {
+			cb = addBytecode(bytecode, Bytecode.PUSH, ctx.start);
+			cb.value = new StringObject(i.getText(), true);
+		}
+		cb = addBytecode(bytecode, Bytecode.CALL, ctx.start);
+		cb.intValue = ctx.farg().size();
+
+		cb = addBytecode(bytecode, Bytecode.PUSH, ctx.start);
+		cb.value = new StringObject(ctx.nname().getText(), true);
+		
+		cb = addBytecode(bytecode, Bytecode.RCALL, ctx.start);
+		cb.intValue = 2;
+
+		cb = addBytecode(bytecode, Bytecode.SAVE, ctx.start);
+		cb.stringValue = ctx.nname().getText();
+	}
+	
 	private void compile(Del_stmtContext ctx, List<PythonBytecode> bytecode) {
 		compileDel(ctx.exprlist(), bytecode);
 	}
@@ -2294,14 +2339,18 @@ public class PythonCompiler {
 		String functionName = "lambda";
 		Utils.putPublic(fnc, "__name__", new StringObject(compilingClass.peek() == null ? functionName : compilingClass.peek() + "." + functionName));
 		
+		compileLambdaBody(fnc, ctx.farg(), ctx.vararg(), ctx.suite(), bytecode);
+	}
+
+	private void compileLambdaBody(UserFunctionObject fnc, List<FargContext> farg, VarargContext vararg, SuiteContext suite, List<PythonBytecode> bytecode) {
 		List<String> arguments = new ArrayList<String>();
-		for (int i=0; i<ctx.farg().size(); i++){
-			arguments.add(ctx.farg(i).nname().getText());
+		for (int i=0; i<farg.size(); i++){
+			arguments.add(farg.get(i).nname().getText());
 		}
 		
 		fnc.args = arguments;
-		if (ctx.vararg() != null){
-			VarargContext vc = ctx.vararg();
+		if (vararg != null){
+			VarargContext vc = vararg;
 			if (vc.svararg() != null){
 				fnc.isVararg = true;
 				fnc.vararg = vc.svararg().nname().getText();
@@ -2314,32 +2363,32 @@ public class PythonCompiler {
 		
 		List<PythonBytecode> fncb = new ArrayList<PythonBytecode>();
 		compilingClass.push(null);
-		doCompileFunction(ctx.suite(), fncb, ctx.suite().start);
+		doCompileFunction(suite, fncb, suite.start);
 		compilingClass.pop();
 		
 		if (fncb.get(fncb.size()-1) instanceof Pop){
 			fncb.remove(fncb.size()-1);
-			cb = addBytecode(fncb, Bytecode.RETURN, ctx.stop);
+			cb = addBytecode(fncb, Bytecode.RETURN, suite.stop);
 			cb.intValue = 1;	
 		} else {
-			cb = addBytecode(fncb, Bytecode.PUSH, ctx.stop);
+			cb = addBytecode(fncb, Bytecode.PUSH, suite.stop);
 			cb.value = NoneObject.NONE;
-			cb = addBytecode(fncb, Bytecode.RETURN, ctx.stop);
+			cb = addBytecode(fncb, Bytecode.RETURN, suite.stop);
 			cb.intValue = 1;	
 		}
 		
 		fnc.block = new CompiledBlockObject(fncb);
 		
-		cb = addBytecode(bytecode, Bytecode.PUSH, ctx.stop);
+		cb = addBytecode(bytecode, Bytecode.PUSH, suite.stop);
 		cb.value = fnc;
 		
-		addBytecode(bytecode, Bytecode.DUP, ctx.stop); // function_defaults
+		addBytecode(bytecode, Bytecode.DUP, suite.stop); // function_defaults
 		// 
-		cb = addBytecode(bytecode, Bytecode.PUSH, ctx.stop);
+		cb = addBytecode(bytecode, Bytecode.PUSH, suite.stop);
 		cb.value = new StringDictObject();
 
-		for (int i=0; i<ctx.farg().size(); i++){
-			FargContext fctx = ctx.farg(i);
+		for (int i=0; i<farg.size(); i++){
+			FargContext fctx = farg.get(i);
 			if (fctx.test() != null){
 				addBytecode(bytecode, Bytecode.DUP, fctx.start);
 				putGetAttr(DictObject.__SETITEM__, bytecode, fctx.start);
@@ -2352,8 +2401,8 @@ public class PythonCompiler {
 			}
 		}
 		
-		addBytecode(bytecode, Bytecode.SWAP_STACK, ctx.stop);
-		cb = addBytecode(bytecode, Bytecode.SETATTR, ctx.stop);
+		addBytecode(bytecode, Bytecode.SWAP_STACK, suite.stop);
+		cb = addBytecode(bytecode, Bytecode.SETATTR, suite.stop);
 		cb.stringValue = "function_defaults";
 	}
 

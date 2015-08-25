@@ -153,6 +153,11 @@ public class PythonBytecode extends PythonObject {
 		{
 			bytecode = Bytecode. LOADBUILTIN;
 		}
+		
+		@Override
+		protected String doToString() {
+			return String.format("%s(%s)", getOpcode().toString(), stringValue);
+		}
 	}
 	
 	public static class OpenLocals extends PythonBytecode {

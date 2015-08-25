@@ -578,6 +578,7 @@ public class PythonRuntime {
 			// Shouldn't happen
 			e.printStackTrace();
 			new File(SimplePython.pycCaches.get(0), pycname).delete();
+		
 			return null;
 		}
 	}
