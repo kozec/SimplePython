@@ -77,15 +77,15 @@ public class UserFunctionObject extends CallableObject {
 	@Override
 	public PythonObject call(TupleObject args, KwArgs kwargs) {
 		TupleObject oargs = args;
-		args = refillArgs(args, kwargs);
 		int argc = args.len();
+		args = refillArgs(args, kwargs);
 		int rargs = this.args.size();
 		
 		if (argc < rargs)
-			throw new TypeError(fields.get("__name__").object + "(): incorrect amount of arguments, expected at least " + rargs + ", got " + args.len());
+			throw new TypeError(fields.get("__name__").object + "(): incorrect amount of arguments, expected at least " + rargs + ", got " + argc);
 		
 		if (!isVararg && argc > rargs)
-			throw new TypeError(fields.get("__name__").object + "(): incorrect amount of arguments, expected at most " + rargs + ", got " + args.len());
+			throw new TypeError(fields.get("__name__").object + "(): incorrect amount of arguments, expected at most " + rargs + ", got " + argc);
 			
 		InternalDict a = new StringDictObject();
 		
