@@ -221,6 +221,8 @@ public class JavaMethodObject extends CallableObject {
 		} catch (PythonExecutionException e){
 			throw e;
 		} catch (InvocationTargetException e){
+			if (e.getTargetException() instanceof PythonException)
+				throw Utils.throwException(((PythonException)e.getTargetException()).type, ((PythonException)e.getTargetException()).message, e.getTargetException());
 			if (e.getTargetException() instanceof PythonExecutionException)
 				throw (RuntimeException)e.getTargetException();
 			throw new NativeError(toString() + ": failed java call", e);
