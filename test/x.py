@@ -1,9 +1,21 @@
-def x():
-    c = 0
-    for a in xrange(1024):
-        for b in xrange(1024):
-            c += a + b
-    return c 
+class Anca:
+    event died(when)
+    
+    def kill(self, time):
+        return self.died(time)
 
-def test():
-    print x()
+anca = Anca()
+
+print Anca.died
+print anca.died
+
+on anca.died(a, *b):
+    print "HANDLER", a, " -> ", b
+    # return True
+
+on anca.died(*c):
+    print "HANDLER2", c
+
+
+if not anca.kill("now"):
+    print "nothing handled killing anca :("

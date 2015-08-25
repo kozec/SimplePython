@@ -140,7 +140,7 @@ public class ClassObject extends CallableObject {
 	 */
 	private void addToInstance(PythonObject s, ClassInstanceObject instance, ClassObject clazz) {
 		InternalDict dict = (InternalDict)s;
-		synchronized (dict){
+		synchronized (dict) {
 			for (String kkey : dict.keySet()){
 				PythonObject value = dict.getVariable(kkey);
 				if (value instanceof ClassMethodObject){
@@ -160,6 +160,8 @@ public class ClassObject extends CallableObject {
 					Utils.putPublic(value, UserMethodObject.SELF, instance);
 					Utils.putPublic(value, UserMethodObject.FUNC, data);
 					Utils.putPublic(value, UserMethodObject.ACCESSOR, clazz);
+				} else if (value instanceof PythonEventObject) {
+					value = new PythonEventObject(get(__NAME__, this).toString(), (PythonEventObject)value);
 				} else if ((value instanceof JavaFunctionObject) && ((JavaFunctionObject)value).isWrappedMethod()){
 					PythonObject data = value;
 					value = new UserMethodObject();

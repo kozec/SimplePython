@@ -341,6 +341,11 @@ public class PythonCompiler {
 		
 		cb = addBytecode(bytecode, Bytecode.LOAD, ctx.start);
 		cb.stringValue = ctx.nname(0).getText();
+		if (ctx.nname().size() > 0) {
+			cb = addBytecode(bytecode, Bytecode.GETATTR, ctx.start);
+			cb.stringValue = ctx.nname(1).getText();
+		}
+		
 		cb = addBytecode(bytecode, Bytecode.GETATTR, ctx.start);
 		cb.stringValue = PythonEventObject.__ADDHANDLER__;
 

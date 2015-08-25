@@ -47,6 +47,14 @@ public class PythonEventObject extends CallableObject {
 		this.argCount = this.args.size();
 		Utils.putPublic(this, PythonEventObject.__HANDLERS__, handlerList);
 	}
+
+	public PythonEventObject(String prefix, PythonEventObject copyFrom) {
+		this.name = prefix + "." + copyFrom.name;
+		this.args = copyFrom.args;
+		this.argCount = this.args.size();
+		Utils.putPublic(this, PythonEventObject.__HANDLERS__, handlerList);
+	}
+
 	
 	@Override
 	protected void newObject() {
