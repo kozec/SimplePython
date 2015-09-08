@@ -20,6 +20,7 @@ package me.enerccio.sp.interpret;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -27,6 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+
+import com.sun.corba.se.impl.encoding.OSFCodeSetRegistry.Entry;
+
+import sun.org.mozilla.classfile.ByteCode;
 
 import me.enerccio.sp.compiler.Bytecode;
 import me.enerccio.sp.errors.AttributeError;
@@ -346,7 +351,7 @@ public class PythonInterpreter extends PythonObject {
 		o.prevPc = spc;
 		Bytecode opcode = o.nextOpcode();
 		Stack<PythonObject> stack = o.stack;
-		
+
 		if (o.accepts_return){
 			o.accepts_return = false;
 			if (returnee == null)
@@ -357,6 +362,10 @@ public class PythonInterpreter extends PythonObject {
 		
 		if (TRACE_ENABLED)
 			System.err.println(CompiledBlockObject.dis(o.compiled, true, spc) + " " + printStack(stack));
+
+		long c = System.currentTimeMillis();
+		long c2 = 0;
+
 		
 		switch (opcode){
 		case NOP:
@@ -409,7 +418,7 @@ public class PythonInterpreter extends PythonObject {
 			krcall(opcode, o, stack);
 			break;
 		case GOTO:
-			gotoOperation(o, stack);
+			o.pc = o.nextInt();
 			break;
 		case JUMPIFFALSE:
 			jumpIfFalse(o, stack);
@@ -525,9 +534,23 @@ public class PythonInterpreter extends PythonObject {
 			if (!mathHelper.mathOperation(this, o, stack, opcode))
 				throw new InterpreterError("unhandled bytecode " + opcode.toString());
 		}
+		
+		c2 = System.currentTimeMillis();
+		synchronized (times) {
+			if (!times.containsKey(opcode)) {
+				times.put(opcode, c2 - c);
+				count.put(opcode, 1L);
+			} else {
+				times.put(opcode, times.get(opcode) + (c2 - c));
+				count.put(opcode, count.get(opcode) + 1);
+			}
+		}
 			
 		return ExecutionResult.OK;
 	}
+	
+	public static Map<Bytecode, Long> times = new HashMap<>();
+	public static Map<Bytecode, Long> count  = new HashMap<>();
 	
 	private void resolveClosure(FrameObject o, Stack<PythonObject> stack) {
 		UserFunctionObject fnc = (UserFunctionObject)stack.peek();
@@ -662,10 +685,6 @@ public class PythonInterpreter extends PythonObject {
 		
 		returnee = execute(false, runnable, null, args);
 		o.accepts_return = (opcode == Bytecode.RCALL);	// KCALL ignores returned value
-	}
-
-	private void gotoOperation(FrameObject o, Stack<PythonObject> stack) {
-		o.pc = o.nextInt();
 	}
 
 	private void jumpIfFalse(FrameObject o, Stack<PythonObject> stack) {
@@ -904,11 +923,7 @@ public class PythonInterpreter extends PythonObject {
 
 	private void resolveArgs(FrameObject o, Stack<PythonObject> stack) {
 		// resolves args into locals
-		synchronized (this.args){
-			for (String key : this.args.keySet()){
-				environment().getLocals().putVariable(key, this.args.getVariable(key));
-			}
-		}
+		environment().prepend(args);
 	}
 
 	private void getAttr(FrameObject o, Stack<PythonObject> stack) {

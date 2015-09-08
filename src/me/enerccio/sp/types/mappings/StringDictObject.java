@@ -152,17 +152,7 @@ public class StringDictObject extends ContainerObject implements InternalDict, D
 		}
 		return o;
 	}
-	
-	public Set<String> keys() {
-		Set<String> rv = new HashSet<>();
-		synchronized (backingMap) {
-			for (String k : backingMap.keySet())
-				rv.add(k);
-		}
-		return rv;
-	}
-
-	
+		
 	public PythonObject values(TupleObject t, KwArgs kwargs) {
 		if (kwargs != null) kwargs.checkEmpty("values");
 		ListObject o = new ListObject();
@@ -258,6 +248,6 @@ public class StringDictObject extends ContainerObject implements InternalDict, D
 
 	@Override
 	public Set<String> keySet() {
-		return keys();
+		return backingMap.keySet();
 	}
 }

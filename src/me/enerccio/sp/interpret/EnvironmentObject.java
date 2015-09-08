@@ -42,6 +42,24 @@ public class EnvironmentObject extends PythonObject {
 		super(true);
 	}
 	
+	private EnvironmentObject(boolean internal){
+		super(internal);
+	}
+	
+	private transient EnvironmentObject pyClone;
+	
+	public EnvironmentObject cloneAsPython(){
+		if (pyClone == null){
+			synchronized (this){
+				if (pyClone == null){
+					pyClone = new EnvironmentObject(false);
+					pyClone.environments = environments;
+				}
+			}
+		}
+		return pyClone;
+	}
+	
 	/**
 	 * Adds closure maps to the environment
 	 * @param closures
@@ -58,6 +76,10 @@ public class EnvironmentObject extends PythonObject {
 		environments.addAll(closures);
 	}
 	
+	public void prepend(InternalDict args) {
+		environments.add(1, args);
+	}
+
 	/**
 	 * Returns bound value to variable
 	 * @param key name of the variable

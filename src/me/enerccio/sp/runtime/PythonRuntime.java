@@ -122,7 +122,7 @@ import me.enerccio.sp.utils.Utils;
  *
  */
 public class PythonRuntime {
-	public static int PREALOCATED_INTEGERS = 512;	// Goes from -PREALOCATED_INTEGERS to PREALOCATED_INTEGERS  
+	public static int PREALOCATED_INTEGERS = 2048;	// Goes from -PREALOCATED_INTEGERS to PREALOCATED_INTEGERS  
 	public static boolean USE_BIGNUM_LONG = false;	// True to use BigNum as backend for python 'long' number 
 	public static boolean USE_DOUBLE_FLOAT = false;	// True to use double as backend for python 'float' number
 	public static boolean USE_INT_ONLY = false;		// True to disable long completely; long(x) will return int and int arithmetic may throw TypeError on overflow  
@@ -429,8 +429,8 @@ public class PythonRuntime {
 					globals = new StringDictObject();
 					buildingGlobals.set(false);
 					
-					EnvironmentObject e = new EnvironmentObject();
-					e.add(globals);
+					// EnvironmentObject e = EnvironmentObject();
+					// e.add(globals);
 					
 					globals.put(NoneTypeObject.NONE_TYPE_CALL, NONE_TYPE);
 					globals.put("None", NoneObject.NONE);

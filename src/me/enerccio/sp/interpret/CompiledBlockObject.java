@@ -57,6 +57,8 @@ public class CompiledBlockObject extends PythonObject {
 		} catch (Exception e) {
 			throw new TypeError("invalid bytecode", e);
 		}
+		bb = ByteBuffer.allocateDirect(compiled.length);
+		bb.put(compiled);
 		Utils.putPublic(this, CO_CODE, new StringObject(Utils.asString(compiled)));
 		Utils.putPublic(this, CO_CONSTS, new DictObject(mmap));
 		Utils.putPublic(this, CO_DEBUG, new PointerObject(dmap));
@@ -566,10 +568,8 @@ public class CompiledBlockObject extends PythonObject {
 		return PythonObject.sfields;
 	}
 
+	private ByteBuffer bb = null;
 	public ByteBuffer getBytedataAsNativeBuffer() {
-		ByteBuffer b = ByteBuffer.allocateDirect(compiled.length);
-		b.put(compiled);
-		b.position(0);
-		return b;
+		return bb.asReadOnlyBuffer();
 	}
 }

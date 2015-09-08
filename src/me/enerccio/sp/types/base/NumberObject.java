@@ -88,7 +88,7 @@ public abstract class NumberObject extends PythonObject
 	@Override protected void registerObject(){ }
 	
 	public static NumberObject valueOf(int n) {
-		if (PythonRuntime.USE_INT_ONLY) 
+		if ((PythonRuntime.USE_INT_ONLY) || (n >= Integer.MIN_VALUE && n <= Integer.MAX_VALUE) ) 
 			return IntObject.getCached(n);
 		return new LongObject(n);
 	}
@@ -368,8 +368,6 @@ public abstract class NumberObject extends PythonObject
 
 		@Override
 		public PythonObject add(PythonObject b){
-			if (b instanceof StringObject)
-				return new StringObject("" + value + ((StringObject)b).value);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -390,6 +388,8 @@ public abstract class NumberObject extends PythonObject
 						}
 				}
 			}
+			if (b instanceof StringObject)
+				return new StringObject("" + value + ((StringObject)b).value);
 			return invalidOperation("+", b);
 		}
 		
@@ -420,8 +420,6 @@ public abstract class NumberObject extends PythonObject
 		
 		@Override
 		public PythonObject mul(PythonObject b){
-			if (b instanceof StringObject)
-				return ((StringObject)b).mul(this);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -442,6 +440,8 @@ public abstract class NumberObject extends PythonObject
 						}
 				}
 			}
+			if (b instanceof StringObject)
+				return ((StringObject)b).mul(this);
 			return invalidOperation("*", b);
 		}
 		
@@ -774,8 +774,6 @@ public abstract class NumberObject extends PythonObject
 
 		@Override
 		public PythonObject add(PythonObject b){
-			if (b instanceof StringObject)
-				return new StringObject("" + value + ((StringObject)b).value);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -788,6 +786,8 @@ public abstract class NumberObject extends PythonObject
 						return NumberObject.valueOf(value + n.longValue());
 				}
 			}
+			if (b instanceof StringObject)
+				return new StringObject("" + value + ((StringObject)b).value);
 			return invalidOperation("+", b);
 		}
 		
@@ -810,8 +810,6 @@ public abstract class NumberObject extends PythonObject
 		
 		@Override
 		public PythonObject mul(PythonObject b){
-			if (b instanceof StringObject)
-				return ((StringObject)b).mul(this);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -824,6 +822,8 @@ public abstract class NumberObject extends PythonObject
 						return NumberObject.valueOf(value * n.longValue());
 				}
 			}
+			if (b instanceof StringObject)
+				return ((StringObject)b).mul(this);
 			return invalidOperation("*", b);
 		}
 		
@@ -1130,8 +1130,6 @@ public abstract class NumberObject extends PythonObject
 
 		@Override
 		public PythonObject add(PythonObject b){
-			if (b instanceof StringObject)
-				return new StringObject("" + value + ((StringObject)b).value);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -1144,6 +1142,8 @@ public abstract class NumberObject extends PythonObject
 						return NumberObject.valueOf(value + n.floatValue());
 				}
 			}
+			if (b instanceof StringObject)
+				return new StringObject("" + value + ((StringObject)b).value);
 			return invalidOperation("+", b);
 		}
 		
@@ -1166,8 +1166,6 @@ public abstract class NumberObject extends PythonObject
 		
 		@Override
 		public PythonObject mul(PythonObject b){
-			if (b instanceof StringObject)
-				return ((StringObject)b).mul(this);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -1180,6 +1178,8 @@ public abstract class NumberObject extends PythonObject
 						return NumberObject.valueOf(value * n.floatValue());
 				}
 			}
+			if (b instanceof StringObject)
+				return ((StringObject)b).mul(this);
 			return invalidOperation("*", b);
 		}
 		
@@ -1388,8 +1388,6 @@ public abstract class NumberObject extends PythonObject
 
 		@Override
 		public PythonObject add(PythonObject b){
-			if (b instanceof StringObject)
-				return new StringObject("" + value + ((StringObject)b).value);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -1402,6 +1400,8 @@ public abstract class NumberObject extends PythonObject
 						return NumberObject.valueOf(value + n.doubleValue());
 				}
 			}
+			if (b instanceof StringObject)
+				return new StringObject("" + value + ((StringObject)b).value);
 			return invalidOperation("+", b);
 		}
 		
@@ -1424,8 +1424,6 @@ public abstract class NumberObject extends PythonObject
 		
 		@Override
 		public PythonObject mul(PythonObject b){
-			if (b instanceof StringObject)
-				return ((StringObject)b).mul(this);
 			if (b instanceof NumberObject) {
 				NumberObject n = (NumberObject)b;
 				switch (n.getNumberType()) {
@@ -1438,6 +1436,8 @@ public abstract class NumberObject extends PythonObject
 						return NumberObject.valueOf(value * n.doubleValue());
 				}
 			}
+			if (b instanceof StringObject)
+				return ((StringObject)b).mul(this);
 			return invalidOperation("*", b);
 		}
 		

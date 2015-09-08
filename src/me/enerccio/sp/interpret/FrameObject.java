@@ -39,6 +39,31 @@ public class FrameObject extends PythonObject {
 		super(true);
 	}
 	
+	private FrameObject(boolean internal){
+		super(internal);
+	}
+	
+	private transient FrameObject external;
+	
+	public FrameObject cloneAsPython(){
+		if (external == null){
+			synchronized (this){
+				if (external == null){
+					external = cloneFrame(false);
+				}
+			}
+		}
+		return external;
+	}
+	
+	public FrameObject cloneFrame() {
+		return cloneFrame(true);
+	}
+	
+	public EnvironmentObject getEnvironment() {
+		return environment.cloneAsPython();
+	}
+	
 	/**
 	 * Parent frame is null if this is normal frame, or reference to parent frame if this is a subframe
 	 */
@@ -91,8 +116,8 @@ public class FrameObject extends PythonObject {
 		return dataStream.getInt();
 	}
 
-	public FrameObject cloneFrame() {
-		FrameObject f = new FrameObject();
+	public FrameObject cloneFrame(boolean b) {
+		FrameObject f = new FrameObject(b);
 		f.newObject();
 		f.pc = pc;
 		f.compiled = compiled;
