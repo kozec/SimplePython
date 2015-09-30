@@ -31,8 +31,6 @@ import java.util.Stack;
 
 import com.sun.corba.se.impl.encoding.OSFCodeSetRegistry.Entry;
 
-import sun.org.mozilla.classfile.ByteCode;
-
 import me.enerccio.sp.compiler.Bytecode;
 import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.errors.InterpreterError;
@@ -954,8 +952,15 @@ public class PythonInterpreter extends PythonObject {
 				return;
 			}
 			// if (value.getType() == g
-			if (value instanceof PointerObject)
+			if (value instanceof PointerObject) {
+				String str = null;
+				try {
+					str = ((CallableObject)value.get("__str__")).call(TupleObject.EMPTY, null).toString();
+				} catch (Exception e) { }
+				if (str != null)
+					throw new AttributeError(str + " has no attribute '" + field + "'");
 				throw new AttributeError("java instance of " + ((PointerObject)value).getObject().getClass().getName() + " has no attribute '" + field + "'");
+			}
 			if (value instanceof ModuleObject)
 				throw new AttributeError("module '" + ((ModuleObject)value).getField(ModuleObject.__NAME__).toString() + "' has no attribute '" + field + "'");
 			throw new AttributeError("" + value.getType() + " object has no attribute '" + field + "'");

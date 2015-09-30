@@ -77,8 +77,8 @@ public class UserFunctionObject extends CallableObject {
 	@Override
 	public PythonObject call(TupleObject args, KwArgs kwargs) {
 		TupleObject oargs = args;
-		int argc = args.len();
 		args = refillArgs(args, kwargs);
+		int argc = args.len();
 		int rargs = this.args.size();
 		
 		if (argc < rargs)
