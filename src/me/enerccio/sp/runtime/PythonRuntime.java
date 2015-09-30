@@ -225,6 +225,14 @@ public class PythonRuntime {
 	public synchronized void addResolver(ModuleResolver resolver){
 		resolvers.add(resolver);
 	}
+
+	public synchronized void prependResolver(ModuleResolver resolver){
+		resolvers.add(0, resolver);
+	}
+	
+	public synchronized void removeResolver(ModuleResolver resolver){
+		resolvers.remove(resolver);
+	}
 	
 	/**
 	 * Called by every object to grab it's link key

@@ -17,23 +17,14 @@
  */
 package me.enerccio.sp.types;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
-import me.enerccio.sp.SimplePython;
 import me.enerccio.sp.compiler.PythonCompiler;
 import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.errors.SyntaxError;
 import me.enerccio.sp.interpret.CompiledBlockObject;
-import me.enerccio.sp.interpret.FilesystemResolver;
 import me.enerccio.sp.interpret.FrameObject;
-import me.enerccio.sp.interpret.InternalDict;
-import me.enerccio.sp.interpret.InternalJavaPathResolver;
 import me.enerccio.sp.interpret.ModuleResolver;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.parser.pythonParser;
@@ -92,28 +83,6 @@ public class ModuleObject extends PythonObject {
 		} catch (Exception e) {
 			throw new SyntaxError("failed to parse source code of " + data.getFileName(), e);
 		}
-	}
-	
-	public static void main(String[] trash) {
-		
-		SimplePython.initialize();
-		SimplePython.setAllowAutowraps(true);
-		SimplePython.addResolver(new FilesystemResolver(Paths.get("").toAbsolutePath().toString() + File.separator + "bin" + File.separator + "t"));
-		
-		final ModuleResolver res = new InternalJavaPathResolver();
-		final ModuleData md = new ModuleData() {
-			@Override public boolean isPackage() { return false; }
-			@Override public ModuleResolver getResolver() { return res; }
-			@Override public String getPackageResolve() { return ""; }
-			@Override public String getName() { return "x"; }
-			@Override public String getFileName() { return "x.py"; }
-		};
-		
-		//ModuleObject m = new ModuleObject(md, false);
-		//m.initModule();
-		
-		ModuleObject x = SimplePython.getModule("x");
-		
 	}
 	
 	public ModuleObject(ModuleData data) {
@@ -180,18 +149,20 @@ public class ModuleObject extends PythonObject {
 	 * Initializes the module.
 	 */
 	public void initModule() {
-		doInitModule();
-		isInited = true;
+		PythonInterpreter i = PythonInterpreter.interpreter.get();
+		int cfc = startInitModule(i);
+		FrameObject frame = i.currentFrame.getLast();
+		i.executeAll(cfc);
+		finishInitModule(frame);
 	}
-
+	
 	/** 
-	 * Initializes the module by executing it's bytecode
+	 * Prepares module initialization.
+	 * Don't call manually unless you know why - use initModule() instead.
 	 */
-	private void doInitModule() {
+	public int startInitModule(PythonInterpreter i) {
 		int cfc = PythonInterpreter.interpreter.get().currentFrame.size();
 		PythonInterpreter.interpreter.get().executeBytecode(frame);
-		
-		FrameObject newFrame = PythonInterpreter.interpreter.get().currentFrame.getLast();
 		
 		StringDictObject args = new StringDictObject();
 		args.putVariable(__THISMODULE__, this);
@@ -201,12 +172,18 @@ public class ModuleObject extends PythonObject {
 			args.putVariable(__INJECTED__, injectedGlobals);		
 		}		
 		
-		PythonInterpreter.interpreter.get().setArgs(args);
-		
-		PythonInterpreter.interpreter.get().executeAll(cfc);
-		
-		globals = (StringDictObject) newFrame.environment.getLocals();
+		i.setArgs(args);
+		return cfc;
+	}
+
+	/**
+	 *Finishes module initialization.
+	 * Don't call manually unless you know why - use initModule() instead.
+	 */
+	public void finishInitModule(FrameObject frame) {
+		globals = (StringDictObject) frame.environment.getLocals();
 		Utils.putPublic(this, __DICT__, globals);
+		isInited = true;
 	}
 
 	/**
