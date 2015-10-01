@@ -74,6 +74,7 @@ import me.enerccio.sp.parser.pythonParser.Import_nameContext;
 import me.enerccio.sp.parser.pythonParser.Import_stmtContext;
 import me.enerccio.sp.parser.pythonParser.IncludeContext;
 import me.enerccio.sp.parser.pythonParser.IntegerContext;
+import me.enerccio.sp.parser.pythonParser.Just_nnameContext;
 import me.enerccio.sp.parser.pythonParser.Label_or_stmtContext;
 import me.enerccio.sp.parser.pythonParser.LambdefContext;
 import me.enerccio.sp.parser.pythonParser.List_forContext;
@@ -84,6 +85,7 @@ import me.enerccio.sp.parser.pythonParser.Not_testContext;
 import me.enerccio.sp.parser.pythonParser.NumberContext;
 import me.enerccio.sp.parser.pythonParser.On_stmtContext;
 import me.enerccio.sp.parser.pythonParser.Or_testContext;
+import me.enerccio.sp.parser.pythonParser.Parenthesesless_callContext;
 import me.enerccio.sp.parser.pythonParser.PowerContext;
 import me.enerccio.sp.parser.pythonParser.Print_stmtContext;
 import me.enerccio.sp.parser.pythonParser.Raise_stmtContext;
@@ -1202,8 +1204,10 @@ public class PythonCompiler {
 						compileImport2(asname, bytecode, packageName);
 					}
 			}
-//		} else if (smstmt.parenthesesless_call() != null) {
-//			compileParentheseslessCall(smstmt.parenthesesless_call(), bytecode);
+		} else if (smstmt.parenthesesless_call() != null) {
+			compileParentheseslessCall(smstmt.parenthesesless_call(), bytecode);
+		} else if (smstmt.just_nname() != null) {
+			compileParentheseslessCall(smstmt.just_nname(), bytecode);
 		} else if (smstmt.pass_stmt() != null){
 			addBytecode(bytecode, Bytecode.NOP, smstmt.start);
 		} else if (smstmt.expr_stmt() != null){
@@ -1217,6 +1221,30 @@ public class PythonCompiler {
 		} else if (smstmt.eventdef() != null){
 			compile(smstmt.eventdef(), bytecode);
 		}
+	}
+
+	private void compileParentheseslessCall(Parenthesesless_callContext pc, List<PythonBytecode> bytecode) {
+		cb = addBytecode(bytecode, Bytecode.LOAD, pc.stop);
+		cb.stringValue = pc.nname().getText();
+		if (pc.arglist() == null){
+			cb = addBytecode(bytecode, Bytecode.CALL, pc.stop);
+			cb.intValue = 0;
+		} else {
+			CallArgsData args = compileArguments(pc.arglist(), bytecode);
+			cb = addBytecode(bytecode, Bytecode.CALL, pc.stop);
+			cb.intValue = args.normalArgCount;
+			if (args.hasArgExpansion)
+				cb.intValue = -1 * (cb.intValue + 1);
+		}
+		addBytecode(bytecode, Bytecode.POP, pc.stop); // Function return value
+	}
+	
+	private void compileParentheseslessCall(Just_nnameContext jn, List<PythonBytecode> bytecode) {
+		cb = addBytecode(bytecode, Bytecode.LOAD, jn.stop);
+		cb.stringValue = jn.nname().getText();
+		cb = addBytecode(bytecode, Bytecode.CALL, jn.stop);
+		cb.intValue = 0;
+		addBytecode(bytecode, Bytecode.POP, jn.stop); // Function return value		
 	}
 
 	private void compile(EventdefContext ctx, List<PythonBytecode> bytecode) {
