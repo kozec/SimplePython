@@ -112,8 +112,7 @@ public class ModuleObject extends PythonObject {
 	}
 	
 	@Override
-	public PythonObject set(String key, PythonObject localContext,
-			PythonObject value) {
+	public PythonObject set(String key, PythonObject localContext, PythonObject value) {
 		if (key.equals(__NAME__) || key.equals(__DICT__))
 			throw new AttributeError("'" + 
 					Utils.run("str", Utils.run("typename", this)) + "' object attribute '" + key + "' is read only");

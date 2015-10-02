@@ -555,7 +555,7 @@ public class PythonRuntime {
 	public static InputStream cachedRead(ModuleData data) {
 		if (data.getName().contains("random"))
 			return null;
-		String pycname = data.getName() + "." + getCacheHash(data) + ".pyc";
+		String pycname = data.getName().replace("/", "__") + "." + getCacheHash(data) + ".pyc";
 		long lastMod = data.getResolver().lastModified(data);
 		for (File f : SimplePython.pycCaches) {
 			File pyc = new File(f, pycname);
@@ -579,7 +579,7 @@ public class PythonRuntime {
 	public static OutputStream cachedWrite(ModuleData data) {
 		if (SimplePython.pycCaches.isEmpty())
 			return null;
-		String pycname = data.getName() + "." + getCacheHash(data) + ".pyc";
+		String pycname = data.getName().replace("/", "__") + "." + getCacheHash(data) + ".pyc";
 		try {
 			return new FileOutputStream(new File(SimplePython.pycCaches.get(0), pycname));
 		} catch (Exception e) {
