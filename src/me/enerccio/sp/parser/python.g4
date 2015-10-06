@@ -206,7 +206,7 @@ simple_stmt:
 ;
 
 small_stmt:
- ( just_nname | expr_stmt | print_stmt | del_stmt | pass_stmt | flow_stmt |
+ ( just_nname | expr_stmt | print_stmt | goto_stmt | del_stmt | pass_stmt | flow_stmt |
             import_stmt | global_stmt | parenthesesless_call | eventdef )
 ;
 
@@ -254,6 +254,10 @@ augassign:
 print_stmt:
  'print' ( (test (',' test)* endp?)? |
                       push test ((',' test)+ endp?)?)
+;
+
+goto_stmt:
+ 'goto' nname
 ;
 
 push:

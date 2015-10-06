@@ -33,6 +33,7 @@ import me.enerccio.sp.errors.AttributeError;
 import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.types.ModuleObject.ModuleData;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.base.LabelObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.mappings.DictObject;
@@ -68,11 +69,15 @@ public class CompiledBlockObject extends PythonObject {
 		super(false);
 		this.compiled = compiled;
 		this.mmap = mmap;
+		bb = ByteBuffer.allocateDirect(compiled.length);
+		bb.put(compiled);
 	}
 
 	public CompiledBlockObject(byte[] compiled) {
 		super(false);
 		this.compiled = compiled;
+		bb = ByteBuffer.allocateDirect(compiled.length);
+		bb.put(compiled);
 		mmap = new HashMap<Integer, PythonObject>();
 		Utils.putPublic(this, CO_CODE, new StringObject(Utils.asString(compiled)));
 		Utils.putPublic(this, CO_CONSTS, new DictObject(mmap));
@@ -131,8 +136,7 @@ public class CompiledBlockObject extends PythonObject {
 	}
 	
 	@Override
-	public synchronized PythonObject set(String key, PythonObject localContext,
-			PythonObject value) {
+	public synchronized PythonObject set(String key, PythonObject localContext, PythonObject value) {
 		if (key.equals(CO_CODE) || key.equals(CO_CONSTS) || key.equals(CO_DEBUG))
 			throw new AttributeError("'" + Utils.run("str", Utils.run("typename", this)) + "' object attribute '" + key + "' is read only");
 		return super.set(key, localContext, value);
@@ -238,7 +242,9 @@ public class CompiledBlockObject extends PythonObject {
 				break;
 			case DELATTR:
 			case GETATTR:
+			case GOTO_LABEL:
 			case KWARG:
+			case LABEL:
 			case LOAD:
 			case LOADGLOBAL:
 			case LOADBUILTIN:
@@ -311,11 +317,11 @@ public class CompiledBlockObject extends PythonObject {
 	
 
 	private static ThreadLocal<Integer> kkey = new ThreadLocal<Integer>();
-	public static byte[] compile(List<PythonBytecode> bytecode,
-			Map<Integer, PythonObject> mmap, NavigableMap<Integer, DebugInformation> dmap) throws Exception {
+	public static byte[] compile(List<PythonBytecode> bytecode, Map<Integer, PythonObject> mmap, NavigableMap<Integer, DebugInformation> dmap) throws Exception {
 		Map<PythonObject, Integer> rmap = new HashMap<PythonObject, Integer>();
 		Map<Integer, Integer> rmapMap = new TreeMap<Integer, Integer>();
 		Map<Integer, Integer> jumpMap = new TreeMap<Integer, Integer>();
+		Map<String, LabelObject> labelMap = new HashMap<String, LabelObject>();
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream w = new DataOutputStream(baos);
@@ -329,6 +335,7 @@ public class CompiledBlockObject extends PythonObject {
 		int itc = 0;
 		for (PythonBytecode b : bytecode){
 			int ii = baos.size();
+			LabelObject lo;
 			rmapMap.put(itc, ii);
 			
 			if (d == null || notEqual(d, b)){
@@ -371,6 +378,14 @@ public class CompiledBlockObject extends PythonObject {
 				jumpMap.put(itc, b.intValue);
 				w.writeInt(0);
 				break;
+			case GOTO_LABEL:
+				lo = labelMap.get(b.stringValue);
+				if (lo == null) {
+					lo = new LabelObject(b.stringValue);
+					labelMap.put(b.stringValue, lo);
+				}
+				w.writeInt(insertValue(lo, mmap, rmap));
+				break;				
 			case IMPORT:
 				w.writeInt(insertValue(new StringObject(b.stringValue), mmap, rmap));
 				w.writeInt(insertValue(new StringObject((String)b.object), mmap, rmap));
@@ -395,6 +410,17 @@ public class CompiledBlockObject extends PythonObject {
 				break;
 			case KCALL:
 				w.writeInt(b.intValue);
+				break;
+			case LABEL:
+				lo = labelMap.get(b.stringValue);
+				if (lo == null) {
+					lo = new LabelObject(b.stringValue, itc);
+					labelMap.put(b.stringValue, lo);
+				} else if (!lo.isValid()) {
+					lo.set(lo.getName(), itc);
+				}
+				System.out.println(lo);
+				w.writeInt(insertValue(lo, mmap, rmap));
 				break;
 			case LOAD:
 				w.writeInt(insertValue(new StringObject(b.stringValue), mmap, rmap));
@@ -538,6 +564,13 @@ public class CompiledBlockObject extends PythonObject {
 			Integer wloc = rmapMap.get(ppos) + 1;
 			b.position(wloc);
 			b.putInt(location);
+		}
+		
+		for (LabelObject lo : labelMap.values()) {
+			if (lo.isValid()) {
+				int pos = rmapMap.get(lo.getPosition());
+				lo.set(lo.getName(), pos);
+			}
 		}
 		
 		return data;

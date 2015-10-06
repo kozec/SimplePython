@@ -378,6 +378,22 @@ public class PythonBytecode extends PythonObject {
 			return String.format("%s(%s)", getOpcode().toString(), intValue);
 		}
 	}
+	
+	public static class Label extends PythonBytecode {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -418151515181518499L;
+
+		{
+			bytecode = Bytecode.LABEL;
+		}
+		
+		@Override
+		protected String doToString() {
+			return String.format("label %s:", stringValue);
+		}
+	}
 
 	public static class RCall extends PythonBytecode {
 		private static final long serialVersionUID = 9058117934717120328L;
@@ -426,6 +442,22 @@ public class PythonBytecode extends PythonObject {
 		@Override
 		protected String doToString() {
 			return String.format("%s(%s)", getOpcode().toString(), intValue);
+		}
+	}
+	
+	public static class GotoLabel extends PythonBytecode {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 941413271543232839L;
+
+		{
+			bytecode = Bytecode.GOTO_LABEL;
+		}
+		
+		@Override
+		protected String doToString() {
+			return String.format("%s(%s)", getOpcode().toString(), stringValue);
 		}
 	}
 	

@@ -35,6 +35,7 @@ import me.enerccio.sp.types.ModuleObject.ModuleData;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.ComplexObject;
 import me.enerccio.sp.types.base.EllipsisObject;
+import me.enerccio.sp.types.base.LabelObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
@@ -49,7 +50,7 @@ public class BlockDefinition {
 	
 	public enum DataTag {
 		MODULE('M'), NONE('N'), INT('I'), LONG('L'), REAL('R'), COMPLEX('C'), BUILTINS('b'), STRING('S'), 
-		ARRAY('A'), STRINGDICT_EMPTY_NEW('D'), ELLIPSIS('E'), BLOCK('B'), FNC('F')
+		ARRAY('A'), STRINGDICT_EMPTY_NEW('D'), ELLIPSIS('E'), BLOCK('B'), FNC('F'), LABEL('l')
 		
 		;
 		
@@ -223,6 +224,13 @@ public class BlockDefinition {
 		case STRING:
 			v = new StringObject((String)pair.getSecond(), false);
 			break;
+		case LABEL:
+			arr = (Object[]) pair.getSecond();
+			v = new LabelObject(
+					(String)((Pair<DataTag, Object>)arr[1]).getSecond(),
+					(Integer)((Pair<DataTag, Object>)arr[0]).getSecond()
+				);
+			break;
 		case STRINGDICT_EMPTY_NEW:
 			v = new StringDictObject();
 			break;
@@ -301,6 +309,11 @@ public class BlockDefinition {
 			return Pair.makePair(DataTag.STRINGDICT_EMPTY_NEW, null);
 		} else if (o instanceof EllipsisObject){
 			return Pair.makePair(DataTag.ELLIPSIS, null);
+		} else if (o instanceof LabelObject){
+			return Pair.makePair(DataTag.LABEL, (Object)(new Object[]{
+					Pair.makePair(DataTag.INT, ((LabelObject)o).getPosition()),
+					Pair.makePair(DataTag.STRING, ((LabelObject)o).getName())
+			}));
 		}
 		
 		throw new RuntimeError("Failed to compile, unknown data type " + o);
@@ -428,6 +441,12 @@ public class BlockDefinition {
 			wr.writeInt(sb.length);
 			wr.write(sb);
 			break;
+		case LABEL:
+			wr.writeInt( (Integer)((Pair<DataTag, Object>)(((Object[])value)[0])).getSecond() );
+			sb = ((String)((Pair<DataTag, Object>)(((Object[])value)[1])).getSecond()).getBytes("utf-8");
+			wr.writeInt(sb.length);
+			wr.write(sb);
+			break;
 		case NONE:
 		case ELLIPSIS:	
 		case BUILTINS:
@@ -477,6 +496,15 @@ public class BlockDefinition {
 			c = dis.readInt();
 			byte[] bd = IOUtils.toByteArray(dis, c);
 			pp = Pair.makePair(t, (Object)new String(bd, "utf-8"));
+			break;
+		case LABEL:
+			int p = dis.readInt();
+			c = dis.readInt();
+			bd = IOUtils.toByteArray(dis, c);
+			pp = Pair.makePair(DataTag.LABEL, (Object)(new Object[]{
+					Pair.makePair(DataTag.INT, p),
+					Pair.makePair(DataTag.STRING, (Object)new String(bd, "utf-8"))
+			}));
 			break;
 		case NONE:
 		case ELLIPSIS:	

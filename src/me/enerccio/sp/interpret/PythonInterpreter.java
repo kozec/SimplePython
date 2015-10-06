@@ -43,6 +43,7 @@ import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.ModuleObject;
 import me.enerccio.sp.types.PythonObject;
 import me.enerccio.sp.types.base.BoolObject;
+import me.enerccio.sp.types.base.LabelObject;
 import me.enerccio.sp.types.base.NoneObject;
 import me.enerccio.sp.types.base.NumberObject;
 import me.enerccio.sp.types.callables.CallableObject;
@@ -369,6 +370,10 @@ public class PythonInterpreter extends PythonObject {
 		case NOP:
 			// do nothing
 			break;
+		case LABEL:
+			// does nothing, but pops string id
+			o.nextInt();
+			break;
 		case RESOLVE_CLOSURE:
 			resolveClosure(o, stack);
 			break;
@@ -417,6 +422,9 @@ public class PythonInterpreter extends PythonObject {
 			break;
 		case GOTO:
 			o.pc = o.nextInt();
+			break;
+		case GOTO_LABEL:
+			gotoLabel(o, stack);
 			break;
 		case JUMPIFFALSE:
 			jumpIfFalse(o, stack);
@@ -685,6 +693,14 @@ public class PythonInterpreter extends PythonObject {
 		o.accepts_return = (opcode == Bytecode.RCALL);	// KCALL ignores returned value
 	}
 
+	
+	private void gotoLabel(FrameObject o, Stack<PythonObject> stack) {
+		LabelObject lo = ((LabelObject)o.compiled.getConstant(o.nextInt()));
+		if (!lo.isValid())
+			throw new Error("Invalid label " + lo.getName());
+		o.pc = lo.getPosition();
+	}
+	
 	private void jumpIfFalse(FrameObject o, Stack<PythonObject> stack) {
 		int jv = o.nextInt();
 		if (!stack.pop().truthValue())

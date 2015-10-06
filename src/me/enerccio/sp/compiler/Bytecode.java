@@ -22,6 +22,7 @@ import java.util.List;
 import me.enerccio.sp.compiler.PythonBytecode.AcceptIter;
 import me.enerccio.sp.compiler.PythonBytecode.BinaryOperator;
 import me.enerccio.sp.compiler.PythonBytecode.Call;
+import me.enerccio.sp.compiler.PythonBytecode.Label;
 import me.enerccio.sp.compiler.PythonBytecode.Del;
 import me.enerccio.sp.compiler.PythonBytecode.DelAttr;
 import me.enerccio.sp.compiler.PythonBytecode.Dup;
@@ -29,6 +30,7 @@ import me.enerccio.sp.compiler.PythonBytecode.ECall;
 import me.enerccio.sp.compiler.PythonBytecode.GetAttr;
 import me.enerccio.sp.compiler.PythonBytecode.GetIter;
 import me.enerccio.sp.compiler.PythonBytecode.Goto;
+import me.enerccio.sp.compiler.PythonBytecode.GotoLabel;
 import me.enerccio.sp.compiler.PythonBytecode.Import;
 import me.enerccio.sp.compiler.PythonBytecode.IsInstance;
 import me.enerccio.sp.compiler.PythonBytecode.JumpIfFalse;
@@ -69,6 +71,7 @@ import me.enerccio.sp.compiler.PythonBytecode.TruthValue;
 import me.enerccio.sp.compiler.PythonBytecode.UnpackKwArg;
 import me.enerccio.sp.compiler.PythonBytecode.UnpackSequence;
 import me.enerccio.sp.compiler.PythonBytecode.Yield;
+import me.enerccio.sp.errors.RuntimeError;
 import me.enerccio.sp.types.ModuleObject.ModuleData;
 
 import org.antlr.v4.runtime.Token;
@@ -80,7 +83,7 @@ import org.antlr.v4.runtime.Token;
  */
 public enum Bytecode {
 	// System
-	NOP(0), 
+	NOP(0), LABEL(1),
 	PUSH_ENVIRONMENT(8), RESOLVE_CLOSURE(10), PUSH_LOCAL_CONTEXT(11), 
 	IMPORT(12), RESOLVE_ARGS(13), PUSH_FRAME(15), PUSH_EXCEPTION(16),
 	OPEN_LOCALS(17), PUSH_LOCALS(18),
@@ -89,7 +92,7 @@ public enum Bytecode {
 	POP(31), PUSH(32), CALL(33), KCALL(34), RCALL(35), ECALL(36), DUP(37),
 	SWAP_STACK(38), JUMPIFTRUE(39), JUMPIFFALSE(40), JUMPIFNONE(41),
 	JUMPIFNORETURN(42), GOTO(43), RETURN(44), SAVE_LOCAL(45),
-	TRUTH_VALUE(46), MAKE_FIRST(47),
+	TRUTH_VALUE(46), MAKE_FIRST(47), GOTO_LABEL(48),
 	// variables
 	LOAD(64), LOADGLOBAL(65), SAVE(66), SAVEGLOBAL(67), UNPACK_SEQUENCE(68), /** free space 69, 70 */ LOADBUILTIN(71),
 	// special call-related
@@ -153,6 +156,10 @@ public enum Bytecode {
 			bytecode = new Call();
 			
 			break;
+		case LABEL:
+			bytecode = new Label();
+			
+			break;
 		case DEL:
 			bytecode = new Del();
 			
@@ -203,6 +210,10 @@ public enum Bytecode {
 			break;
 		case GOTO:
 			bytecode = new Goto();
+			
+			break;
+		case GOTO_LABEL:
+			bytecode = new GotoLabel();
 			
 			break;
 		case JUMPIFFALSE:
@@ -378,6 +389,88 @@ public enum Bytecode {
 		}
 		
 		return bytecode;
+	}
+	
+	/** Returns number of bytes required to stored arguments of specified bytecode */
+	public static int argSize(Bytecode b) {
+		switch (b) {
+			case DELATTR:
+			case POP:
+			case PUSH_LOCALS:
+			case RESOLVE_CLOSURE:
+			case NOP:
+			case PUSH_ENVIRONMENT:
+			case SWAP_STACK:
+			case UNPACK_KWARG:
+			case PUSH_LOCAL_CONTEXT:
+			case RESOLVE_ARGS:
+			case ISINSTANCE:
+			case RAISE:
+			case RERAISE:
+			case PUSH_EXCEPTION:
+			case YIELD:
+			case OPEN_LOCALS:
+				return 0;
+			case IMPORT:
+				return 8;
+			case DEL:
+			case CALL:
+			case LABEL:
+			case TEST_FUTURE:
+			case LOADBUILTIN:
+			case RCALL:
+			case KCALL:
+			case ECALL:
+			case ACCEPT_ITER:
+			case TRUTH_VALUE:
+			case DUP:
+			case GOTO:
+			case GOTO_LABEL:
+			case JUMPIFFALSE:
+			case JUMPIFTRUE:
+			case JUMPIFNONE:
+			case JUMPIFNORETURN:
+			case LOAD:
+			case LOADGLOBAL:
+			case LOAD_FUTURE:
+			case MAKE_FUTURE:
+			case MAKE_FIRST:
+			case PUSH:
+			case RETURN:
+			case SAVE:
+			case SAVEGLOBAL:
+			case KWARG:
+			case UNPACK_SEQUENCE:
+			case GETATTR:
+			case SETATTR:
+			case PUSH_FRAME:
+			case SAVE_LOCAL:
+			case SETUP_LOOP:
+			case GET_ITER:
+				return 4;
+			case ADD:
+			case AND:
+			case DIV:
+			case EQ:
+			case GE:
+			case GT:
+			case LE:
+			case LSHIFT:
+			case LT:
+			case MOD:
+			case MUL:
+			case NE:
+			case OR:
+			case POW:
+			case RSHIFT:
+			case SUB:
+			case XOR:
+				// binary ops
+				return 0;
+			default:
+				break; // to exception
+		}
+		throw new RuntimeError("Unknown bytecode detected in Bytecode.argSize");
 	}
 	
 	/**

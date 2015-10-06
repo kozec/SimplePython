@@ -75,6 +75,7 @@ import me.enerccio.sp.parser.pythonParser.Import_stmtContext;
 import me.enerccio.sp.parser.pythonParser.IncludeContext;
 import me.enerccio.sp.parser.pythonParser.IntegerContext;
 import me.enerccio.sp.parser.pythonParser.Just_nnameContext;
+import me.enerccio.sp.parser.pythonParser.LabelContext;
 import me.enerccio.sp.parser.pythonParser.Label_or_stmtContext;
 import me.enerccio.sp.parser.pythonParser.LambdefContext;
 import me.enerccio.sp.parser.pythonParser.List_forContext;
@@ -693,11 +694,23 @@ public class PythonCompiler {
 		if (ls.include() != null)
 			compileInclude(ls.include(), bytecode, m);
 		if (ls.label() != null)
-			; // TODO: this
+			compileLabel(ls.label(), bytecode, cs);
 		if (ls.stmt() != null)
 			compileStatement(ls.stmt(), bytecode, cs);
 	}
 
+
+	private void compileLabel(LabelContext label, List<PythonBytecode> bytecode, ControllStack cs) {
+		String name = label.nname().getText();
+		for (PythonBytecode bc : bytecode)
+			if (bc.bytecode == Bytecode.LABEL)
+				if (bc.stringValue.equals(name))
+					throw new SyntaxError("Duplicate label: " + name);
+		cb = addBytecode(bytecode, Bytecode.LABEL, label.start);
+		cb.stringValue = name;
+		if (label.suite() != null)
+			compileSuite(label.suite(), bytecode, cs);
+	}
 
 	private void compileInclude(IncludeContext include, List<PythonBytecode> bytecode, final ModuleData m) {
 		final String filename = include.nname().getText();
@@ -1210,6 +1223,9 @@ public class PythonCompiler {
 			compileParentheseslessCall(smstmt.just_nname(), bytecode);
 		} else if (smstmt.pass_stmt() != null){
 			addBytecode(bytecode, Bytecode.NOP, smstmt.start);
+		} else if (smstmt.goto_stmt() != null){
+			cb = addBytecode(bytecode, Bytecode.GOTO_LABEL, smstmt.start);
+			cb.stringValue = smstmt.goto_stmt().nname().getText();
 		} else if (smstmt.expr_stmt() != null){
 			compile(smstmt.expr_stmt(), bytecode);
 		} else if (smstmt.print_stmt() != null){

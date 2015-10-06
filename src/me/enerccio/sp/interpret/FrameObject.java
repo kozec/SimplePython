@@ -105,7 +105,7 @@ public class FrameObject extends PythonObject {
 
 	public boolean yielding = false;
 	public PythonObject sendValue;
-
+	
 	public Bytecode nextOpcode() {
 		++pc;
 		return Bytecode.fromNumber(((short) (dataStream.get() & 0xff)));
