@@ -51,7 +51,6 @@ import me.enerccio.sp.errors.TypeError;
 import me.enerccio.sp.errors.ValueError;
 import me.enerccio.sp.external.JavaRandom;
 import me.enerccio.sp.interpret.CompiledBlockObject;
-import me.enerccio.sp.interpret.EnvironmentObject;
 import me.enerccio.sp.interpret.ExecutionResult;
 import me.enerccio.sp.interpret.InternalDict;
 import me.enerccio.sp.interpret.InternalJavaPathResolver;
@@ -557,6 +556,9 @@ public class PythonRuntime {
 			return null;
 		String pycname = data.getName().replace("/", "__") + "." + getCacheHash(data) + ".pyc";
 		long lastMod = data.getResolver().lastModified(data);
+		if (lastMod == 0)
+			// Just why? :'(
+			return null;
 		for (File f : SimplePython.pycCaches) {
 			File pyc = new File(f, pycname);
 			if (pyc.exists()) {
