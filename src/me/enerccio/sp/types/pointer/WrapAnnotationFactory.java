@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.enerccio.sp.utils.Pair;
+
 /**
  * Wraps all public methods wrapped by @WrapMethod
  * @author Enerccio
@@ -34,12 +36,17 @@ public class WrapAnnotationFactory extends WrapBaseFactory {
 	@Retention(RetentionPolicy.RUNTIME)
 	public static @interface WrapMethod { }
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	public static @interface WrapMethodNoConversion { }
+	
 	@Override
-	protected List<Method> getMethods(Object instance) {
-		List<Method> ml = new ArrayList<Method>();
+	public List<Pair<Method, Boolean>> getMethods(Object instance) {
+		List<Pair<Method, Boolean>> ml = new ArrayList<>();
 		for (Method m : instance.getClass().getMethods()){
 			if (m.isAnnotationPresent(WrapMethod.class))
-				ml.add(m);
+				ml.add(new Pair<>(m, false));
+			else if (m.isAnnotationPresent(WrapMethodNoConversion.class))
+				ml.add(new Pair<>(m, true));
 		}
 		return ml;
 	}

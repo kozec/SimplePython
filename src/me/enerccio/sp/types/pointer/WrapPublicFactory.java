@@ -21,6 +21,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.enerccio.sp.utils.Pair;
+
 /**
  * Wraps all public methods of the object
  * @author Enerccio
@@ -30,10 +32,10 @@ public class WrapPublicFactory extends WrapBaseFactory implements PointerFactory
 	private static final long serialVersionUID = 693487950048251692L;
 
 	@Override
-	protected List<Method> getMethods(Object instance) {
-		List<Method> ml = new ArrayList<Method>();
+	protected List<Pair<Method, Boolean>> getMethods(Object instance) {
+		List<Pair<Method, Boolean>>  ml = new ArrayList<>();
 		for (Method m : instance.getClass().getMethods()){
-			ml.add(m);
+			ml.add(new Pair<>(m, false));
 		}
 		return ml;
 	}

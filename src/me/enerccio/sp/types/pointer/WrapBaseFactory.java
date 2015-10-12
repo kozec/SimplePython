@@ -25,6 +25,7 @@ import java.util.Map;
 
 import me.enerccio.sp.types.callables.JavaCongruentAggregatorObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
+import me.enerccio.sp.utils.Pair;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -36,7 +37,7 @@ import me.enerccio.sp.utils.Utils;
 public abstract class WrapBaseFactory implements PointerFactory {
 	private static final long serialVersionUID = -4111009373007823950L;
 	
-	private static Map<String, List<Method>> cache = Collections.synchronizedMap(new HashMap<String, List<Method>>());
+	private static Map<String, List<Pair<Method, Boolean>>> cache = Collections.synchronizedMap(new HashMap<String, List<Pair<Method, Boolean>>>());
 
 	@Override
 	public final PointerObject doInitialize(Object instance) {
@@ -45,7 +46,7 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		if (!cache.containsKey(instance.getClass().getCanonicalName()))
 			synchronized (cache){
 				if (!cache.containsKey(instance.getClass().getCanonicalName())){
-					List<Method> ml = getMethods(instance);
+					List<Pair<Method, Boolean>> ml = getMethods(instance);
 					cache.put(instance.getClass().getCanonicalName(), ml);
 				}
 			}
@@ -53,13 +54,14 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		synchronized (cache){
 			Map<String, JavaCongruentAggregatorObject> mm = new HashMap<String, JavaCongruentAggregatorObject>();
 			
-			for (Method m : cache.get(instance.getClass().getCanonicalName())){
-				String name = m.getName();
+			for (Pair<Method, Boolean> m : cache.get(instance.getClass().getCanonicalName())){
+				String name = m.getFirst().getName();
 				if (!mm.containsKey(name)){
 					JavaCongruentAggregatorObject co = new JavaCongruentAggregatorObject(name);
 					mm.put(name, co);
 				}
-				mm.get(name).methods.add(new JavaMethodObject(instance, m));
+				JavaMethodObject jm = new JavaMethodObject(instance, m.getFirst(), m.getSecond());
+				mm.get(name).methods.add(jm);
 			}
 			
 			for (String name : mm.keySet()){
@@ -70,5 +72,5 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		return o;
 	}
 
-	protected abstract List<Method> getMethods(Object instance);
+	protected abstract List<Pair<Method, Boolean>> getMethods(Object instance);
 }

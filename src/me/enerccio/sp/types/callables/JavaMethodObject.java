@@ -75,12 +75,12 @@ public class JavaMethodObject extends CallableObject {
 			this.fields.put(__DOC__, new AugumentedPythonObject(new StringObject(pydoc), null));
 	}
 	
-	public JavaMethodObject(Object caller, Method m) {
+	public JavaMethodObject(Object caller, Method m, boolean noTypeConversion) {
 		this.caller = caller;
 		this.boundHandle = m;
 		this.boundHandle.setAccessible(true);
 		this.argNames = m.isAnnotationPresent(ArgNames.class) ? m.getAnnotation(ArgNames.class).value() : null;
-		this.noTypeConversion = false;
+		this.noTypeConversion = noTypeConversion;
 		if (m.isAnnotationPresent(SpyDoc.class)) {
 			String doc = getPydoc(m);
 			this.fields.put(__DOC__, new AugumentedPythonObject(new StringObject(doc), null));
