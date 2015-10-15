@@ -30,6 +30,7 @@ import me.enerccio.sp.interpret.PythonExecutionException;
 import me.enerccio.sp.interpret.PythonInterpreter;
 import me.enerccio.sp.runtime.PythonRuntime;
 import me.enerccio.sp.types.PythonObject;
+import me.enerccio.sp.types.callables.CallableObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
 import me.enerccio.sp.types.callables.UserFunctionObject;
 import me.enerccio.sp.types.mappings.StringDictObject;
@@ -56,6 +57,11 @@ public class PythonFutureObject extends PythonObject implements FutureObject {
 		}
 		startNewFuture();
 	}
+	
+	public PythonFutureObject() {
+		super(false);	
+	}
+	
 
 	@Override
 	public PythonObject getValue(){
@@ -97,7 +103,24 @@ public class PythonFutureObject extends PythonObject implements FutureObject {
 		};
 		t.start();
 	}
+	
+	/** Returns method that can be used to set value of this Future from python */ 
+	public CallableObject getSetter() {
+		try {
+			return new JavaMethodObject(this, "setValue", PythonObject.class);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// Shouldn't be possible
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
 
+	public void setValue(PythonObject o) {
+		result = o;
+		status = FutureStatus.FINISHED;
+		monitor.release();
+	}
+	
 	private PythonObject doGetValue() {
 		if (status == FutureStatus.FINISHED)
 			return result;
@@ -122,7 +145,10 @@ public class PythonFutureObject extends PythonObject implements FutureObject {
 
 	@Override
 	protected String doToString() {
-		return "<future-call of " + futureCall.toString() + ", state = " + status.toString() + ">";
+		if (futureCall == null)
+			return "<future object, state = " + status.toString() + ">";
+		else
+			return "<future object, call to " + futureCall.toString() + ", state = " + status.toString() + ">";
 	}
 
 	@Override

@@ -95,6 +95,7 @@ import me.enerccio.sp.types.types.DictTypeObject;
 import me.enerccio.sp.types.types.EventTypeObject;
 import me.enerccio.sp.types.types.FloatTypeObject;
 import me.enerccio.sp.types.types.FunctionTypeObject;
+import me.enerccio.sp.types.types.FutureTypeObject;
 import me.enerccio.sp.types.types.IntTypeObject;
 import me.enerccio.sp.types.types.JavaCallableTypeObject;
 import me.enerccio.sp.types.types.JavaInstanceTypeObject;
@@ -419,6 +420,7 @@ public class PythonRuntime {
 	public static final TypeObject FLOAT_TYPE = new FloatTypeObject();
 	public static final TypeObject LIST_TYPE = new ListTypeObject();
 	public static final TypeObject EVENT_TYPE = new EventTypeObject();
+	public static final TypeObject FUTURE_TYPE = new FutureTypeObject();
 	
 	static {
 		OBJECT_TYPE.newObject();
@@ -480,7 +482,8 @@ public class PythonRuntime {
 					globals.put(ComplexTypeObject.COMPLEX_CALL, new ComplexTypeObject());
 					globals.put(BoundFunctionTypeObject.BOUND_FUNCTION_CALL, new BoundFunctionTypeObject());
 					globals.put(XRangeTypeObject.XRANGE_CALL, new XRangeTypeObject());
-					globals.put(EventTypeObject.EVENT_CALL, EVENT_TYPE); 
+					globals.put(EventTypeObject.EVENT_CALL, EVENT_TYPE);
+					globals.put(FutureTypeObject.FUTURE_CALL, FUTURE_TYPE); 
 					
 					addExceptions(globals);
 					
