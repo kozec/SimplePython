@@ -223,7 +223,7 @@ with_item:
 ;
 
 eventdef:
- 'event' nname '(' farg? (',' farg)* ')'
+ 'def event' nname '(' farg? (',' farg)* ')'
 ;
 
 on_stmt:
