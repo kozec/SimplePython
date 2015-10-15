@@ -23,8 +23,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.enerccio.sp.utils.Pair;
-
 /**
  * Wraps all public methods wrapped by @WrapMethod
  * @author Enerccio
@@ -34,19 +32,26 @@ public class WrapAnnotationFactory extends WrapBaseFactory {
 	private static final long serialVersionUID = -5142774589035715501L;
 
 	@Retention(RetentionPolicy.RUNTIME)
-	public static @interface WrapMethod { }
+	public static @interface WrapMethod {
+		String[] value() default {};
+	}
 	
 	@Retention(RetentionPolicy.RUNTIME)
 	public static @interface WrapMethodNoConversion { }
 	
 	@Override
-	public List<Pair<Method, Boolean>> getMethods(Object instance) {
-		List<Pair<Method, Boolean>> ml = new ArrayList<>();
+	public List<MethodData> getMethods(Object instance) {
+		List<MethodData> ml = new ArrayList<>();
 		for (Method m : instance.getClass().getMethods()){
-			if (m.isAnnotationPresent(WrapMethod.class))
-				ml.add(new Pair<>(m, false));
-			else if (m.isAnnotationPresent(WrapMethodNoConversion.class))
-				ml.add(new Pair<>(m, true));
+			if (m.isAnnotationPresent(WrapMethod.class)) {
+				if (m.getAnnotation(WrapMethod.class).value().length == 0)
+					ml.add(new MethodData(m.getName(), m, false));
+				else
+					for (String name : m.getAnnotation(WrapMethod.class).value())
+						ml.add(new MethodData(name, m, false));
+			} else if (m.isAnnotationPresent(WrapMethodNoConversion.class)) {
+				ml.add(new MethodData(m.getName(), m, true));
+			}
 		}
 		return ml;
 	}

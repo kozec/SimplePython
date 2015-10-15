@@ -25,7 +25,6 @@ import java.util.Map;
 
 import me.enerccio.sp.types.callables.JavaCongruentAggregatorObject;
 import me.enerccio.sp.types.callables.JavaMethodObject;
-import me.enerccio.sp.utils.Pair;
 import me.enerccio.sp.utils.Utils;
 
 /**
@@ -37,8 +36,20 @@ import me.enerccio.sp.utils.Utils;
 public abstract class WrapBaseFactory implements PointerFactory {
 	private static final long serialVersionUID = -4111009373007823950L;
 	
-	private static Map<String, List<Pair<Method, Boolean>>> cache = Collections.synchronizedMap(new HashMap<String, List<Pair<Method, Boolean>>>());
+	private static Map<String, List<MethodData>> cache = Collections.synchronizedMap(new HashMap<String, List<MethodData>>());
 
+	public static class MethodData {
+		final String name;
+		final Method method;
+		final boolean noTypeConversion;
+		
+		public MethodData(String name, Method method, boolean noTypeConversion) {
+			this.name = name;
+			this.method = method;
+			this.noTypeConversion = noTypeConversion;
+		}
+	}
+	
 	@Override
 	public final PointerObject doInitialize(Object instance) {
 		PointerObject o = new PointerObject(instance);
@@ -46,7 +57,7 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		if (!cache.containsKey(instance.getClass().getCanonicalName()))
 			synchronized (cache){
 				if (!cache.containsKey(instance.getClass().getCanonicalName())){
-					List<Pair<Method, Boolean>> ml = getMethods(instance);
+					List<MethodData> ml = getMethods(instance);
 					cache.put(instance.getClass().getCanonicalName(), ml);
 				}
 			}
@@ -54,14 +65,13 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		synchronized (cache){
 			Map<String, JavaCongruentAggregatorObject> mm = new HashMap<String, JavaCongruentAggregatorObject>();
 			
-			for (Pair<Method, Boolean> m : cache.get(instance.getClass().getCanonicalName())){
-				String name = m.getFirst().getName();
-				if (!mm.containsKey(name)){
-					JavaCongruentAggregatorObject co = new JavaCongruentAggregatorObject(name);
-					mm.put(name, co);
+			for (MethodData m : cache.get(instance.getClass().getCanonicalName())){
+				if (!mm.containsKey(m.name)){
+					JavaCongruentAggregatorObject co = new JavaCongruentAggregatorObject(m.name);
+					mm.put(m.name, co);
 				}
-				JavaMethodObject jm = new JavaMethodObject(instance, m.getFirst(), m.getSecond());
-				mm.get(name).methods.add(jm);
+				JavaMethodObject jm = new JavaMethodObject(instance, m.method, m.noTypeConversion);
+				mm.get(m.name).methods.add(jm);
 			}
 			
 			for (String name : mm.keySet()){
@@ -72,5 +82,5 @@ public abstract class WrapBaseFactory implements PointerFactory {
 		return o;
 	}
 
-	protected abstract List<Pair<Method, Boolean>> getMethods(Object instance);
+	protected abstract List<MethodData> getMethods(Object instance);
 }
